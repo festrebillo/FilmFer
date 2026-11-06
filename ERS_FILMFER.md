@@ -1,6 +1,6 @@
 # ERS — FilmFer (web de filtros para fotos)
 
-Documento vivo. Última actualización: 2026-11-06 · Versión de la app: 1.0.0
+Documento vivo. Última actualización: 2026-11-06 · Versión de la app: 1.1.0
 
 ## 1. Objetivo
 Web estática (GitHub Pages / PWA) donde el usuario sube una foto, elige un preset, ajusta la
@@ -10,14 +10,15 @@ nunca se sube a un servidor.
 ## 2. Requisitos
 | ID | Requisito | Estado |
 |----|-----------|--------|
-| R1 | Varios presets originales (no copias de presets de pago) | Hecho: 8 (Film, Golden Hour, Clean Bright, Moody, Cinematic, Mar Turquesa, B&N Cálido, Matte) |
+| R1 | Biblioteca amplia de presets ORIGINALES (no copias ni extracción de presets de pago) | Hecho: 56 en 8 categorías (Cálidos 9, Fríos 7, Cine 7, Película 9, Vívidos 6, Suaves 6, B&N 6, Oscuros 6). Ampliable. |
 | R2 | Conservar la calidad: resolución original, procesado en flotante, dither final | Hecho |
-| R3 | Vista previa en vivo + comparar con original (mantener pulsado) | Hecho |
+| R3 | Vista previa en vivo + comparar con original (arrastrar el control sobre la foto) | Hecho |
 | R4 | Intensidad, grano y ajustes finos (exposición, calidez, saturación, contraste) | Hecho |
 | R5 | Exportar JPG 100% / 95% o PNG sin pérdida | Hecho |
 | R6 | Conservar EXIF y perfil de color (Display P3) en JPG | Hecho (probado EXIF; P3 sin probar con foto real de iPhone) |
 | R7 | Exportar el preset como LUT .cube (video en CapCut escritorio / DaVinci / Premiere) | Hecho |
-| R8 | Instalable en iPhone (PWA) y guardar en Fotos con "Compartir" | Hecho, pendiente de probar en iPhone |
+| R8 | Instalable en iPhone (PWA); "Guardar en galería" abre la hoja de compartir (un toque en "Guardar imagen"). Una web NO puede escribir directo en Fotos. La foto se deja lista en segundo plano para que el toque sea inmediato. | Hecho; usuario probó v1.0 en iPhone |
+| R11 | Interfaz con identidad propia (mesa de luz, marco de diapositiva, rollo de película; claro/oscuro automático) | Hecho en 1.1.0 |
 | R9 | Aplicar el filtro a video dentro de la web | Pendiente (fase 2, ver §5) |
 | R10 | Exportar presets como .xmp de Lightroom | Pendiente (fase 2, será aproximado) |
 
@@ -47,8 +48,8 @@ Opciones: (a) LUT .cube en CapCut escritorio/DaVinci (ya disponible); (b) en la 
 - Pendiente: foto real de iPhone (P3, HEIC), Safari iOS, compartir a Fotos.
 
 ## 7. Publicación
-Aún NO publicado. Pendiente de confirmar con el usuario: nombre del repositorio y si será público
-(un repositorio público deja ver los ajustes de los presets).
+Publicado: https://festrebillo.github.io/FilmFer/ (repo público festrebillo/FilmFer; GitHub Pages gratis exige repo público). Cada push a main actualiza la web en 1-2 min.
 
 ## 8. Historial
+- 1.1.0 (2026-11-06): interfaz nueva; 56 presets en 8 categorías; comparador arrastrable; guardado en galería con hoja de compartir y preparación en segundo plano; foto de ejemplo al abrir; corregido: el deslizador de contraste no llegaba al motor; motor con curvas por canal y tono en medios tonos.
 - 1.0.0 (2026-11-06): primera versión con 8 presets, exportación con metadatos y LUT.

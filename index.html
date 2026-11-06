@@ -3,102 +3,193 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#14110f">
+<meta name="theme-color" content="#e3e8e9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14181a" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FilmFer">
+<meta name="color-scheme" content="light dark">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <title>FilmFer</title>
 <style>
+  /* Mesa de luz: la foto va en un marco de diapositiva y los presets son fotogramas de un rollo. */
   :root{
-    --bg:#14110f; --panel:#1d1815; --line:#33292340; --line2:#3a2f28;
-    --txt:#f3ece4; --mut:#a89a8c; --acc:#e8b86a; --acc-ink:#1a120a;
+    --table:#e3e8e9; --table-hi:#f1f4f4; --paper:#f6f8f8; --line:#c9d1d3;
+    --ink:#14181a; --mut:#566266;
+    --mount:#101214; --reel:#17191b; --hole:var(--table); --edge:#e2a13a; --edge-dim:#8d8a80;
+    --mask:#e0702a; --mask-ink:#1d0e04; --acetate:#1f7a85;
+    --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+    --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--table:#14181a; --table-hi:#1c2224; --paper:#1d2326; --line:#2f393c; --ink:#e8eeee; --mut:#93a1a5;
+          --acetate:#4fb3bf; --hole:#3b4348}
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  body{min-height:100vh;padding:max(14px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
-  .app{max-width:760px;margin:0 auto}
-  header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
-  h1{font-size:20px;margin:0;letter-spacing:.2px}
-  header small{color:var(--mut)}
-  .drop{display:grid;place-items:center;text-align:center;gap:6px;border:1.5px dashed var(--line2);border-radius:16px;
-        background:var(--panel);padding:44px 16px;cursor:pointer;transition:border-color .15s}
-  .drop:hover,.drop.over{border-color:var(--acc)}
-  .drop b{font-size:17px}.drop span{color:var(--mut);font-size:13px}
-  .stage{position:relative;border-radius:14px;overflow:hidden;background:#000;display:none}
-  .stage canvas{display:block;width:100%;height:auto;max-height:68vh;object-fit:contain;margin:0 auto}
-  .badge{position:absolute;left:10px;top:10px;background:#000a;color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;
-         backdrop-filter:blur(6px);pointer-events:none}
-  .busy{position:absolute;right:10px;top:10px;background:#000a;border-radius:999px;padding:3px 10px;font-size:12px;display:none}
-  .row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:10px 0 0}
-  button,.btn{font:inherit;color:var(--txt);background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:10px 14px;cursor:pointer;
-       min-height:44px;touch-action:manipulation}
-  button:hover{border-color:var(--acc)}
-  button.primary{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:650}
-  button:disabled{opacity:.5;cursor:default}
-  .strip{display:flex;gap:10px;overflow-x:auto;padding:12px 2px 6px;margin:0 -2px;scroll-snap-type:x proximity}
-  .th{flex:0 0 auto;width:104px;text-align:center;cursor:pointer;scroll-snap-align:start;background:none;border:0;padding:0;min-height:0;color:inherit}
-  .th canvas{width:104px;height:78px;border-radius:10px;display:block;border:2px solid transparent;background:#000}
-  .th.on canvas{border-color:var(--acc)}
-  .th span{display:block;font-size:12px;margin-top:5px;color:var(--mut)}
-  .th.on span{color:var(--txt)}
-  .desc{color:var(--mut);font-size:13px;margin:4px 2px 0;min-height:19px}
-  .panel{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:6px 14px;margin-top:12px}
-  .ctl{display:grid;grid-template-columns:96px 1fr 44px;gap:10px;align-items:center;padding:7px 0}
-  .ctl label{color:var(--mut);font-size:13px}.ctl output{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
-  input[type=range]{width:100%;accent-color:var(--acc);height:32px;margin:0}
-  details summary{cursor:pointer;color:var(--mut);padding:10px 0;font-size:13px;list-style:none}
-  details summary::-webkit-details-marker{display:none}
-  .opts{display:grid;gap:10px;padding:2px 0 10px}
-  .opts label{display:flex;gap:8px;align-items:center;font-size:14px}
-  select{font:inherit;color:var(--txt);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px}
-  .actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
-  .actions .wide{grid-column:1/-1}
-  .note{color:var(--mut);font-size:12px;margin-top:12px}
-  .hold{touch-action:none;user-select:none;-webkit-user-select:none}
-  @media (min-width:620px){.th{width:120px}.th canvas{width:120px;height:90px}}
+  html{background:var(--table)}
+  body{margin:0;min-height:100vh;color:var(--ink);font:15px/1.45 var(--body);
+       background:radial-gradient(120% 70% at 50% 0%,var(--table-hi),var(--table));
+       padding:max(12px,env(safe-area-inset-top)) 0 0}
+  button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+  :focus-visible{outline:2px solid var(--acetate);outline-offset:2px}
+
+  .app{max-width:1180px;margin:0 auto;padding:0 16px}
+  .top{display:flex;align-items:center;justify-content:space-between;min-height:48px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand svg{width:30px;height:24px;flex:none}
+  .wordmark{font:800 30px/1 var(--display);letter-spacing:.03em}
+  .top small{color:var(--mut);font-size:12px;margin-left:2px;align-self:flex-end;padding-bottom:3px}
+  .ghost{background:none;border:1px solid var(--line);border-radius:8px;padding:8px 14px;min-height:40px}
+  .ghost:hover{border-color:var(--ink)}
+
+  .layout{display:grid;gap:14px;margin-top:6px}
+
+  /* ---- Marco de diapositiva ---- */
+  .mount{background:var(--mount);border-radius:6px;padding:10px 10px 0;
+         box-shadow:0 14px 28px -16px #0007,0 1px 0 #ffffff14 inset}
+  .window{position:relative;background:#000;overflow:hidden;touch-action:pan-y;line-height:0}
+  .window canvas{display:block;width:100%;height:auto;max-height:64vh;object-fit:contain;margin:0 auto}
+  #viewOrig{position:absolute;inset:0;margin:auto;clip-path:inset(0 calc(100% - var(--cmp,0%)) 0 0)}
+  .handle{position:absolute;top:0;bottom:0;left:var(--cmp,0%);width:44px;margin-left:-22px;display:grid;place-items:center;
+          cursor:ew-resize;touch-action:none;border:0;background:none;padding:0}
+  .handle::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 0 1px #0005}
+  .handle i{position:relative;width:34px;height:34px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;
+            box-shadow:0 2px 8px #0008;font-style:normal}
+  .handle svg{width:18px;height:18px}
+  .mount-label{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:42px;padding:0 2px;
+               font-family:var(--display);color:var(--edge)}
+  .mount-label b{font-weight:800;font-size:19px;letter-spacing:.04em}
+  .mount-label span{font:500 12px/1.2 var(--body);color:var(--edge-dim);text-align:right}
+
+  /* ---- Rollo de presets ---- */
+  .tools{min-width:0}
+  .cats{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
+  .cats::-webkit-scrollbar{display:none}
+  .cat{flex:none;background:none;border:0;border-bottom:3px solid transparent;padding:12px 12px 9px;color:var(--mut);font-weight:500;
+       white-space:nowrap;margin-bottom:-1px}
+  .cat small{margin-left:5px;font-size:11px;opacity:.75}
+  .cat[aria-selected=true]{color:var(--ink);border-bottom-color:var(--mask)}
+  .strip{overflow-x:auto;scrollbar-width:thin;margin:10px -16px 0;background:var(--reel);scroll-snap-type:x proximity;overscroll-behavior-x:contain;scroll-padding-left:16px}
+  .reel{position:relative;display:flex;gap:8px;width:max-content;min-width:100%;padding:24px 16px 32px}
+  .reel::before,.reel::after{content:"";position:absolute;left:0;right:0;height:8px;
+        background:repeating-linear-gradient(90deg,var(--hole) 0 9px,transparent 9px 21px);opacity:.9}
+  .reel::before{top:8px}.reel::after{bottom:8px}
+  .frame{flex:none;width:118px;background:none;border:0;padding:0;text-align:left;scroll-snap-align:start;color:var(--edge-dim)}
+  .frame canvas{display:block;width:118px;height:88px;background:#000;outline:2px solid transparent;outline-offset:2px;border-radius:1px}
+  .frame .cap{display:flex;gap:6px;align-items:baseline;margin-top:6px;font-family:var(--display);font-size:15px;letter-spacing:.04em;font-weight:600;
+              white-space:nowrap;overflow:hidden}
+  .frame .cap i{font-style:normal;color:var(--edge);opacity:.85}
+  .frame .cap span{overflow:hidden;text-overflow:ellipsis}
+  .frame[aria-pressed=true] canvas{outline-color:var(--acetate)}
+  .frame[aria-pressed=true] .cap{color:#fff}
+  .frame:hover canvas{outline-color:#ffffff55}
+  .frame[aria-pressed=true]:hover canvas{outline-color:var(--acetate)}
+  .about{margin:10px 2px 0;color:var(--mut);font-size:13px;min-height:20px}
+
+  .intensity{display:grid;grid-template-columns:auto 1fr 40px;gap:12px;align-items:center;margin-top:8px}
+  .intensity label{font-weight:600}
+  output{font-variant-numeric:tabular-nums;text-align:right;font-size:13px;color:var(--mut)}
+  input[type=range]{width:100%;height:36px;margin:0;accent-color:var(--ink)}
+  .legal{margin:16px 2px 0;color:var(--mut);font-size:12px}
+
+  /* ---- Barra inferior ---- */
+  .dock{position:sticky;bottom:0;display:flex;gap:10px;padding:12px 0 max(12px,env(safe-area-inset-bottom));margin-top:10px;
+        background:linear-gradient(to top,var(--table) 70%,transparent)}
+  .btn{border:1px solid var(--line);background:var(--paper);border-radius:8px;min-height:50px;padding:0 18px;font-weight:600}
+  .btn:hover{border-color:var(--ink)}
+  .btn.primary{flex:1;background:var(--mask);border-color:var(--mask);color:var(--mask-ink);font-size:16px;letter-spacing:.01em}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .btn:disabled{opacity:.6;cursor:progress}
+
+  /* ---- Ajustes (hoja inferior en celular, panel fijo en escritorio) ---- */
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--paper);border-radius:14px 14px 0 0;max-height:82vh;overflow:auto;
+         padding:6px 16px max(18px,env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .22s ease;
+         box-shadow:0 -12px 30px -10px #0006}
+  .sheet.open{transform:none}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--paper);padding:10px 0 6px}
+  .sheet-head h2{margin:0;font:800 22px/1 var(--display);letter-spacing:.04em}
+  .backdrop{position:fixed;inset:0;background:#0006;z-index:10;opacity:0;pointer-events:none;transition:opacity .2s}
+  .backdrop.on{opacity:1;pointer-events:auto}
+  .ctl{display:grid;grid-template-columns:100px 1fr 44px;gap:10px;align-items:center;padding:3px 0}
+  .ctl label{color:var(--mut);font-size:14px}
+  .sheet h3{margin:14px 0 4px;font-size:13px;font-weight:600;color:var(--mut)}
+  .opts{display:grid;gap:10px;margin-top:8px}
+  .opts label{display:flex;gap:10px;align-items:center;font-size:14px}
+  select{font:inherit;color:var(--ink);background:var(--table);border:1px solid var(--line);border-radius:8px;padding:9px;max-width:100%}
+  .rowbtns{display:grid;gap:8px;margin-top:14px}
+
+  /* ---- Aviso ---- */
+  .toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,12px);z-index:30;max-width:min(92vw,420px);
+         background:var(--ink);color:var(--table);padding:11px 16px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;
+         transition:opacity .2s,transform .2s}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+
+  @media (min-width:960px){
+    .layout{grid-template-columns:minmax(0,1fr) 440px;gap:28px;align-items:start;margin-top:14px}
+    .tools{display:flex;flex-direction:column}
+    .dock{order:1}.sheet{order:2}.legal{order:3}
+    .stage-col{position:sticky;top:12px}
+    .window canvas{max-height:78vh}
+    .dock{background:none;position:static;padding:14px 0 0}
+    #openSheet,.sheet-head button,.backdrop{display:none}
+    .sheet{position:static;transform:none;border-radius:10px;max-height:none;box-shadow:none;border:1px solid var(--line);margin-top:14px;padding:4px 16px 16px;transition:none}
+    .sheet-head{position:static;padding:10px 0 4px}
+    .strip,.cats{margin-left:0;margin-right:0}
+    .cats{padding:0}
+    .reel{padding-left:12px}
+    .toast{bottom:24px}
+  }
+  @media (prefers-reduced-motion:reduce){.sheet,.toast,.backdrop{transition:none}}
 </style>
 </head>
 <body>
-<div class="app">
-  <header><h1>FilmFer</h1><small id="ver">v1.0</small></header>
-
-  <label class="drop" id="drop">
-    <input id="file" type="file" accept="image/*" hidden>
-    <b>Elige una foto</b>
-    <span>o arrástrala aquí · se procesa en tu dispositivo, no se sube a ningún lado</span>
-  </label>
-
-  <div class="stage" id="stage">
-    <canvas id="view"></canvas>
-    <div class="badge" id="badge">Original</div>
-    <div class="busy" id="busy">Procesando…</div>
-  </div>
-
-  <div id="editor" hidden>
-    <div class="row">
-      <button id="hold" class="hold">Mantén para ver el original</button>
-      <button id="change">Cambiar foto</button>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 30 24" aria-hidden="true"><rect x="1.5" y="1.5" width="27" height="21" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="6" y="5" width="18" height="14" rx="1" fill="var(--mask)"/><g fill="currentColor"><rect x="4" y="0" width="3" height="3"/><rect x="13.5" y="0" width="3" height="3"/><rect x="23" y="0" width="3" height="3"/><rect x="4" y="21" width="3" height="3"/><rect x="13.5" y="21" width="3" height="3"/><rect x="23" y="21" width="3" height="3"/></g></svg>
+      <span class="wordmark">FilmFer</span><small id="ver"></small>
     </div>
+    <button class="ghost" id="change" hidden>Otra foto</button>
+  </header>
 
-    <div class="strip" id="strip"></div>
-    <div class="desc" id="desc"></div>
+  <input id="file" type="file" accept="image/*" hidden>
 
-    <div class="panel">
-      <div class="ctl"><label for="intensity">Intensidad</label><input id="intensity" type="range" min="0" max="100" value="100"><output></output></div>
-      <div class="ctl"><label for="grain">Grano</label><input id="grain" type="range" min="0" max="150" value="100"><output></output></div>
-      <details>
-        <summary>Ajustes finos</summary>
+  <main class="layout">
+    <section class="stage-col" aria-label="Foto">
+      <div class="mount" id="stage">
+        <div class="window" id="window">
+          <canvas id="view" aria-label="Foto con el preset aplicado"></canvas>
+          <canvas id="viewOrig" aria-hidden="true"></canvas>
+          <button class="handle" id="handle" role="slider" aria-label="Comparar con el original" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></i>
+          </button>
+        </div>
+        <div class="mount-label"><b id="badge">Original</b><span id="status">Foto de ejemplo</span></div>
+      </div>
+    </section>
+
+    <section class="tools" aria-label="Presets">
+      <div class="cats" id="cats" role="tablist" aria-label="Categorías"></div>
+      <div class="strip" id="strip"><div class="reel" id="reel"></div></div>
+      <div class="about" id="about"></div>
+
+      <div class="intensity">
+        <label for="intensity">Intensidad</label>
+        <input id="intensity" type="range" min="0" max="100" value="100">
+        <output></output>
+      </div>
+
+      <div class="sheet" id="sheet" role="dialog" aria-label="Ajustes">
+        <div class="sheet-head"><h2>Ajustes</h2><button class="ghost" id="closeSheet" type="button">Listo</button></div>
+        <div class="ctl"><label for="grain">Grano</label><input id="grain" type="range" min="0" max="150" value="100"><output></output></div>
         <div class="ctl"><label for="ev">Exposición</label><input id="ev" type="range" min="-100" max="100" value="0"><output></output></div>
         <div class="ctl"><label for="temp">Calidez</label><input id="temp" type="range" min="-100" max="100" value="0"><output></output></div>
         <div class="ctl"><label for="sat">Saturación</label><input id="sat" type="range" min="-100" max="100" value="0"><output></output></div>
         <div class="ctl"><label for="contrast">Contraste</label><input id="contrast" type="range" min="-100" max="100" value="0"><output></output></div>
-      </details>
-    </div>
-
-    <div class="panel">
-      <details open>
-        <summary>Calidad de exportación</summary>
+        <h3>Al guardar</h3>
         <div class="opts">
           <label>Formato
             <select id="fmt">
@@ -107,19 +198,25 @@
               <option value="png">PNG sin pérdida (pesa más)</option>
             </select>
           </label>
-          <label><input type="checkbox" id="keepmeta" checked> Conservar datos de la foto (EXIF, fecha, cámara) y color</label>
+          <label><input type="checkbox" id="keepmeta" checked> Conservar datos de la foto (cámara, fecha) y color</label>
         </div>
-      </details>
-    </div>
+        <div class="rowbtns">
+          <button class="btn" id="saveFile" type="button">Descargar como archivo</button>
+          <button class="btn" id="cube" type="button">Descargar este preset como LUT (.cube) para video</button>
+        </div>
+      </div>
 
-    <div class="actions">
-      <button class="primary" id="save">Descargar foto</button>
-      <button id="share" hidden>Guardar en Fotos / Compartir</button>
-      <button id="cube" class="wide">Descargar este preset como LUT (.cube) para video</button>
-    </div>
-    <div class="note" id="note"></div>
-  </div>
+      <p class="legal">Tu foto se procesa en este dispositivo. No se sube a ningún servidor.</p>
+
+      <div class="dock" id="dock">
+        <button class="btn" id="openSheet" type="button">Ajustes</button>
+        <button class="btn primary" id="save" type="button">Elegir mi foto</button>
+      </div>
+    </section>
+  </main>
 </div>
+<div class="backdrop" id="backdrop"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="engine.js"></script>
 <script src="presets.js"></script>

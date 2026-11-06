@@ -40,7 +40,14 @@
     p.ev += adj.ev || 0;
     p.temp += adj.temp || 0;
     p.sat += adj.sat || 0;
+    p.contrast += adj.contrast || 0;
     p.gain = Math.pow(2, p.ev);
+    // curvas por canal: [sombras, medios, luces], cada valor -1..1 (±0.1 de señal)
+    p.curv = null;
+    if (p.curves) {
+      const z = [0, 0, 0];
+      p.curv = { r: p.curves.r || z, g: p.curves.g || z, b: p.curves.b || z };
+    }
     p.rGain = 1 + 0.22 * p.temp;
     p.bGain = 1 - 0.22 * p.temp;
     p.gGain = 1 - 0.12 * p.tint;
@@ -54,8 +61,9 @@
     }
     p.hasBands = p.bandList.length > 0;
 
-    p.sh = null; p.hi = null;
+    p.sh = null; p.hi = null; p.mid = null;
     if (p.split) {
+      if (p.split.mid) p.mid = { rgb: hueToRgb(p.split.mid[0]), amt: p.split.mid[1] };
       if (p.split.sh) p.sh = { rgb: hueToRgb(p.split.sh[0]), amt: p.split.sh[1] };
       if (p.split.hi) p.hi = { rgb: hueToRgb(p.split.hi[0]), amt: p.split.hi[1] };
       p.bal = p.split.bal || 0;
@@ -150,9 +158,14 @@
     }
 
     // 8) Tono dividido (sombras / luces)
-    if (P.sh || P.hi) {
+    if (P.sh || P.hi || P.mid) {
       y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
       const t = clamp01(y + P.bal * 0.5);
+      if (P.mid) {
+        const w = 4 * t * (1 - t) * P.mid.amt;
+        const q = P.mid.rgb, ql = 0.2126 * q[0] + 0.7152 * q[1] + 0.0722 * q[2];
+        r += (q[0] - ql) * w; g += (q[1] - ql) * w; b += (q[2] - ql) * w;
+      }
       if (P.sh) {
         const w = (1 - t) * (1 - t) * P.sh.amt;
         const q = P.sh.rgb, ql = 0.2126 * q[0] + 0.7152 * q[1] + 0.0722 * q[2];
@@ -163,6 +176,16 @@
         const q = P.hi.rgb, ql = 0.2126 * q[0] + 0.7152 * q[1] + 0.0722 * q[2];
         r += (q[0] - ql) * w; g += (q[1] - ql) * w; b += (q[2] - ql) * w;
       }
+    }
+
+    // 9) Curvas por canal (cross-process, tintes de película)
+    if (P.curv) {
+      y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const wl = (1 - y) * (1 - y), wh = y * y, wm = 4 * y * (1 - y);
+      const cr = P.curv.r, cg = P.curv.g, cb = P.curv.b;
+      r += 0.1 * (cr[0] * wl + cr[1] * wm + cr[2] * wh);
+      g += 0.1 * (cg[0] * wl + cg[1] * wm + cg[2] * wh);
+      b += 0.1 * (cb[0] * wl + cb[1] * wm + cb[2] * wh);
     }
 
     O[0] = clamp01(r); O[1] = clamp01(g); O[2] = clamp01(b);
