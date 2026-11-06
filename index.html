@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14110f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FilmFer">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>FilmFer</title>
+<style>
+  :root{
+    --bg:#14110f; --panel:#1d1815; --line:#33292340; --line2:#3a2f28;
+    --txt:#f3ece4; --mut:#a89a8c; --acc:#e8b86a; --acc-ink:#1a120a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  body{min-height:100vh;padding:max(14px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
+  .app{max-width:760px;margin:0 auto}
+  header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+  h1{font-size:20px;margin:0;letter-spacing:.2px}
+  header small{color:var(--mut)}
+  .drop{display:grid;place-items:center;text-align:center;gap:6px;border:1.5px dashed var(--line2);border-radius:16px;
+        background:var(--panel);padding:44px 16px;cursor:pointer;transition:border-color .15s}
+  .drop:hover,.drop.over{border-color:var(--acc)}
+  .drop b{font-size:17px}.drop span{color:var(--mut);font-size:13px}
+  .stage{position:relative;border-radius:14px;overflow:hidden;background:#000;display:none}
+  .stage canvas{display:block;width:100%;height:auto;max-height:68vh;object-fit:contain;margin:0 auto}
+  .badge{position:absolute;left:10px;top:10px;background:#000a;color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;
+         backdrop-filter:blur(6px);pointer-events:none}
+  .busy{position:absolute;right:10px;top:10px;background:#000a;border-radius:999px;padding:3px 10px;font-size:12px;display:none}
+  .row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:10px 0 0}
+  button,.btn{font:inherit;color:var(--txt);background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:10px 14px;cursor:pointer;
+       min-height:44px;touch-action:manipulation}
+  button:hover{border-color:var(--acc)}
+  button.primary{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:650}
+  button:disabled{opacity:.5;cursor:default}
+  .strip{display:flex;gap:10px;overflow-x:auto;padding:12px 2px 6px;margin:0 -2px;scroll-snap-type:x proximity}
+  .th{flex:0 0 auto;width:104px;text-align:center;cursor:pointer;scroll-snap-align:start;background:none;border:0;padding:0;min-height:0;color:inherit}
+  .th canvas{width:104px;height:78px;border-radius:10px;display:block;border:2px solid transparent;background:#000}
+  .th.on canvas{border-color:var(--acc)}
+  .th span{display:block;font-size:12px;margin-top:5px;color:var(--mut)}
+  .th.on span{color:var(--txt)}
+  .desc{color:var(--mut);font-size:13px;margin:4px 2px 0;min-height:19px}
+  .panel{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:6px 14px;margin-top:12px}
+  .ctl{display:grid;grid-template-columns:96px 1fr 44px;gap:10px;align-items:center;padding:7px 0}
+  .ctl label{color:var(--mut);font-size:13px}.ctl output{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+  input[type=range]{width:100%;accent-color:var(--acc);height:32px;margin:0}
+  details summary{cursor:pointer;color:var(--mut);padding:10px 0;font-size:13px;list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  .opts{display:grid;gap:10px;padding:2px 0 10px}
+  .opts label{display:flex;gap:8px;align-items:center;font-size:14px}
+  select{font:inherit;color:var(--txt);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px}
+  .actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+  .actions .wide{grid-column:1/-1}
+  .note{color:var(--mut);font-size:12px;margin-top:12px}
+  .hold{touch-action:none;user-select:none;-webkit-user-select:none}
+  @media (min-width:620px){.th{width:120px}.th canvas{width:120px;height:90px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><h1>FilmFer</h1><small id="ver">v1.0</small></header>
+
+  <label class="drop" id="drop">
+    <input id="file" type="file" accept="image/*" hidden>
+    <b>Elige una foto</b>
+    <span>o arrástrala aquí · se procesa en tu dispositivo, no se sube a ningún lado</span>
+  </label>
+
+  <div class="stage" id="stage">
+    <canvas id="view"></canvas>
+    <div class="badge" id="badge">Original</div>
+    <div class="busy" id="busy">Procesando…</div>
+  </div>
+
+  <div id="editor" hidden>
+    <div class="row">
+      <button id="hold" class="hold">Mantén para ver el original</button>
+      <button id="change">Cambiar foto</button>
+    </div>
+
+    <div class="strip" id="strip"></div>
+    <div class="desc" id="desc"></div>
+
+    <div class="panel">
+      <div class="ctl"><label for="intensity">Intensidad</label><input id="intensity" type="range" min="0" max="100" value="100"><output></output></div>
+      <div class="ctl"><label for="grain">Grano</label><input id="grain" type="range" min="0" max="150" value="100"><output></output></div>
+      <details>
+        <summary>Ajustes finos</summary>
+        <div class="ctl"><label for="ev">Exposición</label><input id="ev" type="range" min="-100" max="100" value="0"><output></output></div>
+        <div class="ctl"><label for="temp">Calidez</label><input id="temp" type="range" min="-100" max="100" value="0"><output></output></div>
+        <div class="ctl"><label for="sat">Saturación</label><input id="sat" type="range" min="-100" max="100" value="0"><output></output></div>
+        <div class="ctl"><label for="contrast">Contraste</label><input id="contrast" type="range" min="-100" max="100" value="0"><output></output></div>
+      </details>
+    </div>
+
+    <div class="panel">
+      <details open>
+        <summary>Calidad de exportación</summary>
+        <div class="opts">
+          <label>Formato
+            <select id="fmt">
+              <option value="jpg100">JPG calidad máxima (100%)</option>
+              <option value="jpg95">JPG alta (95%)</option>
+              <option value="png">PNG sin pérdida (pesa más)</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="keepmeta" checked> Conservar datos de la foto (EXIF, fecha, cámara) y color</label>
+        </div>
+      </details>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="save">Descargar foto</button>
+      <button id="share" hidden>Guardar en Fotos / Compartir</button>
+      <button id="cube" class="wide">Descargar este preset como LUT (.cube) para video</button>
+    </div>
+    <div class="note" id="note"></div>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script src="presets.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
