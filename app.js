@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const VERSION = '1.3.0';
+  const VERSION = '1.4.0';
   const $ = (id) => document.getElementById(id);
   $('ver').textContent = 'v' + VERSION;
 
@@ -171,7 +171,7 @@
 
   /* ---------- categorías y rollo ---------- */
   function renderCats() {
-    const box = $('cats'); box.innerHTML = '';
+    const box = $('cats'); const keep = box.scrollLeft; box.innerHTML = ''; let sel = null;
     for (const c of CATS) {
       const n = c.id === 'all' ? PRESETS.length : PRESETS.filter((p) => p.cat === c.id).length;
       const b = document.createElement('button');
@@ -180,7 +180,9 @@
       b.textContent = c.name;
       b.addEventListener('click', () => { state.cat = c.id; renderCats(); renderStrip(); $('strip').scrollLeft = 0; });
       box.append(b);
+      if (c.id === state.cat) sel = b;
     }
+    if (sel) box.scrollTo({ left: sel.offsetLeft - (box.clientWidth - sel.clientWidth) / 2, behavior: 'smooth' });
   }
 
   function thumbFor(p) {
