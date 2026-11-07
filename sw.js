@@ -1,5 +1,5 @@
 /* Service worker: primero red (siempre la versión nueva), y caché si no hay internet. */
-const CACHE = 'filmfer-v1.4.0';
+const CACHE = 'filmfer-v1.5.0';
 const FILES = ['./', 'index.html', 'app.js', 'engine.js', 'presets.js', 'worker.js', 'jpegenc.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
 
 self.addEventListener('install', (e) => {

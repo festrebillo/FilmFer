@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const VERSION = '1.4.0';
+  const VERSION = '1.5.0';
   const $ = (id) => document.getElementById(id);
   $('ver').textContent = 'v' + VERSION;
 
@@ -151,7 +151,7 @@
     $('viewOrig').getContext('2d').putImageData(state.orig, 0, 0);
     $('view').getContext('2d').putImageData(state.orig, 0, 0);
     $('save').textContent = isDemo ? 'Elegir mi foto' : (IS_MOBILE && navigator.canShare ? 'Guardar en galería' : 'Guardar foto');
-    $('change').hidden = isDemo;
+    $('change').hidden = isDemo; $('exit').hidden = isDemo;
     setStatus(label);
     renderStrip();
     selectPreset(state.presetId);
@@ -230,7 +230,9 @@
     const p = id === 'none' ? { name: 'Original', desc: 'Sin filtro' } : presetById(id);
     $('about').textContent = p ? p.desc : '';
     $('pname').textContent = p ? p.name : '';
-    $('cube').disabled = id === 'none';
+    const noLut = id === 'none' || (p && p.lutOk === false);
+    $('cube').disabled = noLut;
+    $('cube').textContent = id !== 'none' && p && p.lutOk === false ? 'Este efecto no se puede exportar como LUT' : 'Descargar preset como LUT (.cube) para video';
     requestPreview();
   }
 
@@ -521,6 +523,16 @@
   /* ---------- eventos ---------- */
   $('file').addEventListener('change', (e) => { loadFile(e.target.files[0]); e.target.value = ''; });
   $('change').addEventListener('click', () => $('file').click());
+  /* Salir: vuelve al inicio (foto de ejemplo), sin foto cargada, con los ajustes en su valor original */
+  $('exit').addEventListener('click', () => {
+    openSheet(false);
+    state.file = null; state.cache = null; state.renderKey = null;
+    for (const id of ['ev', 'temp', 'sat', 'contrast']) $(id).value = 0;
+    $('grain').value = 100; $('intensity').value = 100;
+    refreshOutputs();
+    setSource(makeSample(), true, 'Foto de ejemplo');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
   ['dragenter', 'dragover'].forEach((t) => document.addEventListener(t, (e) => e.preventDefault()));
   document.addEventListener('drop', (e) => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
 
@@ -536,7 +548,7 @@
   self.__presetsTest = { renderFull, state, selectPreset, loadFile };
 
   /* ---------- pantalla de carga ---------- */
-  const SPLASH_MIN_MS = 1500;
+  const SPLASH_MIN_MS = 2600;
   function hideSplash() {
     const el = $('splash'); if (!el) return;
     const wait = Math.max(0, SPLASH_MIN_MS - performance.now());

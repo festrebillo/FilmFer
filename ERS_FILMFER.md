@@ -1,6 +1,6 @@
 # ERS — FilmFer (web de filtros para fotos)
 
-Documento vivo. Última actualización: 2026-11-06 · Versión de la app: 1.4.0
+Documento vivo. Última actualización: 2026-11-06 · Versión de la app: 1.5.0
 
 ## 1. Objetivo
 Web estática (GitHub Pages / PWA) donde el usuario sube una foto, elige un preset, ajusta la
@@ -10,7 +10,7 @@ nunca se sube a un servidor.
 ## 2. Requisitos
 | ID | Requisito | Estado |
 |----|-----------|--------|
-| R1 | Biblioteca amplia de presets ORIGINALES (no copias ni extracción de presets de pago) | Hecho: 94 en 11 categorías (Cálidos 9, Fríos 7, Cine 7, Película 9, Vívidos 6, Suaves 6, B&N 6, Oscuros 6, Film 400 13, Estilo de vida 12, Escenas 13). Ampliable. |
+| R1 | Biblioteca amplia de presets ORIGINALES (no copias ni extracción de presets de pago) | Hecho: 114 en 13 categorías (Cálidos 9, Fríos 7, Cine 7, Película 9, Vívidos 6, Suaves 6, B&N 6, Oscuros 6, Film 400 13, Estilo de vida 12, Escenas 13, Tendencias 13, Efectos 7). Ampliable. |
 | R2 | Conservar la calidad: resolución original, procesado en flotante, dither final | Hecho |
 | R3 | Vista previa en vivo + comparar con original (arrastrar el control sobre la foto) | Hecho |
 | R4 | Intensidad, grano y ajustes finos (exposición, calidez, saturación, contraste) | Hecho |
@@ -20,7 +20,10 @@ nunca se sube a un servidor.
 | R8 | Instalable en iPhone (PWA); "Guardar en galería" abre la hoja de compartir (un toque en "Guardar imagen"). Una web NO puede escribir directo en Fotos. La foto se deja lista en segundo plano para que el toque sea inmediato. | Hecho; usuario probó v1.0 en iPhone |
 | R12 | Fotos de cualquier tamaño (p. ej. 48 MP de iPhone) se guardan COMPLETAS, sin reducir ni recortar: se procesan y codifican por franjas (jpegenc.js), sin lienzo completo | Hecho en 1.2.0. Probado en Chrome (12 MP y 48.8 MP); pendiente probar en iPhone real |
 | R11 | Interfaz estilo Apple (fuente del sistema, cristal translúcido, carrusel de filtros tipo Fotos, categorías en píldoras, hoja inferior de ajustes, control segmentado e interruptor iOS; claro/oscuro automático). Ver el original: mantener presionada la foto. | Hecho en 1.3.0 |
+| R15 | Efectos de posición en el motor: pixelado por bloques (potencia de 2, alineado a franjas), pocos niveles/paleta con tramado Bayer, líneas de escaneo, desfase RGB, fuga de luz. Los presets con estos efectos no exportan LUT (lutOk:false) | Hecho en 1.5.0; franjas == entera verificado |
+| R16 | Botón Salir (vuelve al inicio con foto de ejemplo y ajustes en su valor) además de Otra foto | Hecho en 1.5.0 |
 | R13 | Pantalla de carga animada al abrir (ícono, nombre, barra); se cierra al estar lista la primera vista previa (mínimo 1.5 s) | Hecho en 1.3.0 |
+| R17 | Ícono nuevo (fotograma partido en frío/cálido con perilla de comparar y perforaciones) e intro nueva (marco de película con una foto que cambia de look) | Hecho en 1.5.0 |
 | R14 | Foto de ejemplo al abrir sin personas (atardecer en la playa con palmera y velero) | Hecho en 1.3.0 |
 | R9 | Aplicar el filtro a video dentro de la web | Pendiente (fase 2, ver §5) |
 | R10 | Exportar presets como .xmp de Lightroom | Pendiente (fase 2, será aproximado) |
@@ -55,6 +58,7 @@ Opciones: (a) LUT .cube en CapCut escritorio/DaVinci (ya disponible); (b) en la 
 Publicado: https://festrebillo.github.io/FilmFer/ (repo público festrebillo/FilmFer; GitHub Pages gratis exige repo público). Cada push a main actualiza la web en 1-2 min.
 
 ## 8. Historial
+- 1.5.0 (2026-11-06): +20 presets (Tendencias 13 a partir de búsqueda web: digicam, fuga de luz, Clarendon/Gingham-like, 2016, Dark Academia, Mocha, Cyberpunk, Vaporwave...; Efectos 7: Píxel Suave, 8 Bits, Mosaico, Game Boy, Retro Arcade, VHS, Glitch). Film 400 reajustado con mediciones de las portadas de Península (cielos más pálidos, negros más levantados, Vivo más saturado, Retro menos naranja). Botón Salir. Ícono e intro nuevos.
 - 1.4.0 (2026-11-06): +38 presets propios. Film 400 (13): looks de película de 400 ISO inspirados en el estilo de la tienda Peninsula Presets (revisada: Film Nº1-8, Retro 01-02, Blvck, Vivo, Cine Nº1; archivos .DNG US$5.99 c/u, pack US$29.99), recreados desde cero a partir de sus imágenes de portada, sin acceso ni copia de sus archivos. Estilo de vida (12) y Escenas (13): temas inspirados en los packs de 123Presets (Old Money, Quiet Luxury, Bright & Airy, Golden Hour, Twilight, Underwater, etc.). Afinados sobre 7 fotos reales del usuario (WhatsApp, 720-960 px). Todos con nombre propio.
 - 1.3.0 (2026-11-06): rediseño estilo Apple; pantalla de carga animada; foto de ejemplo sin persona (playa); ver original manteniendo presionada la foto; control de formato segmentado; deslizadores bipolares llenan desde el centro; íconos nuevos; contraste AA en colores de acento.
 - 1.2.0 (2026-11-06): fotos más grandes que el límite del navegador ya no se reducen: exportación por franjas con codificador JPEG propio; barra de progreso al guardar.

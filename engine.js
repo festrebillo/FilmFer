@@ -199,8 +199,12 @@
     return (h >>> 0) / 4294967296;
   }
 
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+
   /* Procesa un ImageData.data (RGBA 8 bits) EN SITIO.
-     opts: { intensity 0..1, adj:{ev,temp,sat,contrast}, grainScale, spatial (false = sin grano/viñeta), seed } */
+     opts: { intensity 0..1, adj:{ev,temp,sat,contrast}, grainScale, spatial (false = sin efectos de posición), seed,
+             fullW, fullH, y0 (para procesar por franjas; y0 debe ser múltiplo de 128) }
+     Efectos de posición del preset: pixel (divisiones del lado largo), levels, palette, rgbShift, scan, leak, vig, grain. */
   function processImage(data, w, h, preset, opts) {
     opts = opts || {};
     const intensity = opts.intensity == null ? 1 : opts.intensity;
@@ -216,13 +220,50 @@
     const hw = FW / 2, hh = FH / 2;
     const GR = 0.09; // amplitud máxima del grano (fracción de 1)
 
+    // Pixelado: bloques de tamaño potencia de 2 (divide las franjas de 256 filas, así no hay costuras)
+    let B = 0, bw = 0, bavg = null;
+    if (spatial && P.pixel) {
+      const t = Math.round(maxDim / P.pixel);
+      B = Math.min(128, Math.max(2, Math.pow(2, Math.round(Math.log2(Math.max(2, t))))));
+      bw = Math.ceil(w / B);
+      const bh = Math.ceil(h / B);
+      bavg = new Float32Array(bw * bh * 3);
+      const cnt = new Float32Array(bw * bh);
+      for (let y = 0; y < h; y++) {
+        const by = (y / B) | 0;
+        for (let x = 0, i = y * w * 4; x < w; x++, i += 4) {
+          const k = by * bw + ((x / B) | 0);
+          bavg[k * 3] += data[i]; bavg[k * 3 + 1] += data[i + 1]; bavg[k * 3 + 2] += data[i + 2]; cnt[k]++;
+        }
+      }
+      for (let k = 0; k < cnt.length; k++) {
+        const c = (cnt[k] || 1) * 255;
+        bavg[k * 3] /= c; bavg[k * 3 + 1] /= c; bavg[k * 3 + 2] /= c;
+      }
+    }
+    const SH = spatial && P.rgbShift ? Math.max(1, Math.round(P.rgbShift * maxDim)) : 0;
+    const rowBuf = SH ? new Uint8ClampedArray(w * 4) : null;
+    const scanP = spatial && P.scan ? Math.max(2, Math.round(FH / P.scan.lines)) : 0;
+    const LV = spatial && P.levels ? P.levels : 0;
+    const pal = spatial && P.palette ? P.palette : null;
+    const leak = spatial && P.leak ? { x: P.leak.x, y: P.leak.y, rad: P.leak.rad, amt: P.leak.amt, c: hueToRgb(P.leak.hue) } : null;
+
     for (let y = 0, i = 0; y < h; y++) {
       const Y = y + Y0;
       const gy = (Y / cell) | 0;
       const ny = (Y - hh) / hh;
+      if (SH) rowBuf.set(data.subarray(i, i + w * 4));
       for (let x = 0; x < w; x++, i += 4) {
         const r0 = data[i] / 255, g0 = data[i + 1] / 255, b0 = data[i + 2] / 255;
-        core(r0, g0, b0, P);
+        let sr = r0, sg = g0, sb = b0;
+        if (B) {
+          const k = (((y / B) | 0) * bw + ((x / B) | 0)) * 3;
+          sr = bavg[k]; sg = bavg[k + 1]; sb = bavg[k + 2];
+        } else if (SH) {
+          sr = rowBuf[Math.max(0, x - SH) * 4] / 255;
+          sb = rowBuf[Math.min(w - 1, x + SH) * 4 + 2] / 255;
+        }
+        core(sr, sg, sb, P);
         let r = O[0], g = O[1], b = O[2];
 
         if (vig) {
@@ -241,12 +282,38 @@
           const cn = (hash(gx, gy, seed + 13) - 0.5) * 0.25 * P.grainAmt * GR * k;
           r += a + cn; g += a; b += a - cn;
         }
+        if (leak) { // fuga de luz de película (mezcla tipo "screen")
+          const dx = x / FW - leak.x, dy = Y / FH - leak.y;
+          const q = Math.sqrt(dx * dx + dy * dy) / leak.rad;
+          if (q < 1) {
+            const f = (1 - q) * (1 - q) * leak.amt;
+            r = 1 - (1 - clamp01(r)) * (1 - f * leak.c[0]);
+            g = 1 - (1 - clamp01(g)) * (1 - f * leak.c[1]);
+            b = 1 - (1 - clamp01(b)) * (1 - f * leak.c[2]);
+          }
+        }
+        if (scanP && (((Y / scanP) | 0) & 1)) { const m = 1 - P.scan.amt; r *= m; g *= m; b *= m; }
+        if (pal || LV) { // pocos colores con tramado ordenado (estilo 8 bits / Game Boy)
+          const bx = B ? (x / B) | 0 : x, by = B ? (Y / B) | 0 : Y;
+          const t = (BAYER[((by & 3) << 2) | (bx & 3)] + 0.5) / 16 - 0.5;
+          if (pal) {
+            const ly = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            let idx = Math.floor(ly * (pal.length - 1) + 0.5 + t * 0.9);
+            idx = idx < 0 ? 0 : idx > pal.length - 1 ? pal.length - 1 : idx;
+            r = pal[idx][0]; g = pal[idx][1]; b = pal[idx][2];
+          } else {
+            const q = LV - 1;
+            r = Math.floor(clamp01(r) * q + 0.5 + t * 0.5) / q;
+            g = Math.floor(clamp01(g) * q + 0.5 + t * 0.5) / q;
+            b = Math.floor(clamp01(b) * q + 0.5 + t * 0.5) / q;
+          }
+        }
 
         if (intensity < 1) {
           r = r0 + (r - r0) * intensity; g = g0 + (g - g0) * intensity; b = b0 + (b - b0) * intensity;
         }
-        // Dither triangular de ±1 nivel: evita bandas en degradados al pasar a 8 bits
-        const dn = (hash(x, Y, 91) + hash(x, Y, 92) - 1) * 1.0;
+        // Dither triangular de ±1 nivel: evita bandas en degradados al pasar a 8 bits (no en paletas)
+        const dn = (pal || LV) ? 0 : (hash(x, Y, 91) + hash(x, Y, 92) - 1) * 1.0;
         data[i] = clamp01(r) * 255 + dn + 0.5;
         data[i + 1] = clamp01(g) * 255 + dn + 0.5;
         data[i + 2] = clamp01(b) * 255 + dn + 0.5;
