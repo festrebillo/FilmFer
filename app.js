@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const VERSION = '1.2.0';
+  const VERSION = '1.3.0';
   const $ = (id) => document.getElementById(id);
   $('ver').textContent = 'v' + VERSION;
 
@@ -61,37 +61,77 @@
       const el = $(id), v = +el.value;
       el.parentElement.querySelector('output').textContent =
         (id === 'intensity' || id === 'grain') ? v + '%' : (v > 0 ? '+' + v : '' + v);
+      const pc = (v - el.min) / (el.max - el.min) * 100, bip = +el.min < 0;
+      el.style.setProperty('--lo', (bip ? Math.min(pc, 50) : 0) + '%');
+      el.style.setProperty('--hi', (bip ? Math.max(pc, 50) : pc) + '%');
     }
   }
   const presetById = (id) => PRESETS.find((p) => p.id === id);
+  const getFmt = () => document.querySelector('input[name=fmt]:checked').value;
 
-  /* ---------- foto de ejemplo (para ver los presets antes de elegir una foto) ---------- */
+  /* ---------- foto de ejemplo: atardecer en la playa (para ver los presets antes de elegir una foto) ---------- */
   function makeSample() {
-    const W = 960, H = 640, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const W = 960, H = 640, HZ = 330, c = document.createElement('canvas'); c.width = W; c.height = H;
     const x = c.getContext('2d');
-    let g = x.createLinearGradient(0, 0, 0, H * 0.55);
-    g.addColorStop(0, '#4c86d6'); g.addColorStop(0.7, '#a9cbe8'); g.addColorStop(1, '#f1dcc0');
-    x.fillStyle = g; x.fillRect(0, 0, W, H);
-    g = x.createRadialGradient(740, 130, 4, 740, 130, 150);
-    g.addColorStop(0, '#fff6d8'); g.addColorStop(0.25, '#ffe6a8aa'); g.addColorStop(1, '#ffe6a800');
-    x.fillStyle = g; x.fillRect(0, 0, W, H);
-    const ridge = (col, pts) => { x.fillStyle = col; x.beginPath(); x.moveTo(0, H * 0.6); pts.forEach(([a, b]) => x.lineTo(a, b)); x.lineTo(W, H * 0.6); x.closePath(); x.fill(); };
-    ridge('#5f7f86', [[0, 330], [180, 250], [360, 320], [560, 230], [760, 320], [960, 270]]);
-    ridge('#3f6b4f', [[0, 380], [220, 310], [420, 380], [640, 300], [960, 390]]);
-    g = x.createLinearGradient(0, 330, 0, 430); g.addColorStop(0, '#5ba6b8'); g.addColorStop(1, '#2a6f86');
-    x.fillStyle = g; x.fillRect(0, 380, W, 70);
-    g = x.createLinearGradient(0, 430, 0, H); g.addColorStop(0, '#4f8a3e'); g.addColorStop(1, '#2a5a2a');
-    x.fillStyle = g; x.fillRect(0, 430, W, H - 430);
-    let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    const cols = ['#e8d44a', '#e0584a', '#f4f0e6', '#c26ab8'];
-    for (let i = 0; i < 160; i++) { x.fillStyle = cols[i % 4]; x.beginPath(); x.arc(rnd() * W, 450 + rnd() * 180, 2 + rnd() * 3, 0, 7); x.fill(); }
-    // persona: cabeza, pelo y camiseta
-    x.fillStyle = '#2f6fb8'; x.beginPath(); x.roundRect(330, 470, 170, 180, 40); x.fill();
-    x.fillStyle = '#d9a186'; x.beginPath(); x.ellipse(415, 410, 52, 64, 0, 0, 7); x.fill();
-    x.fillStyle = '#4a2f22'; x.beginPath(); x.ellipse(415, 368, 58, 38, 0, Math.PI, 0); x.fill();
-    x.fillStyle = '#3a2a22'; x.beginPath(); x.arc(396, 410, 4, 0, 7); x.arc(434, 410, 4, 0, 7); x.fill();
-    x.strokeStyle = '#a5594f'; x.lineWidth = 4; x.lineCap = 'round'; x.beginPath(); x.arc(415, 428, 16, 0.2, Math.PI - 0.2); x.stroke();
-    x.filter = 'blur(1px)'; x.drawImage(c, 0, 0); x.filter = 'none';
+    let g = x.createLinearGradient(0, 0, 0, HZ);
+    g.addColorStop(0, '#3f78cf'); g.addColorStop(0.55, '#8fbbe6'); g.addColorStop(1, '#f6dcbc');
+    x.fillStyle = g; x.fillRect(0, 0, W, HZ);
+    // nubes suaves
+    x.save(); x.filter = 'blur(14px)';
+    for (const [cx, cy, rx, ry, al] of [[200, 90, 150, 26, .85], [330, 120, 120, 20, .7], [720, 70, 170, 24, .8], [600, 150, 110, 16, .6], [90, 190, 110, 14, .55]]) {
+      x.fillStyle = `rgba(255,255,255,${al})`; x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, 7); x.fill();
+    }
+    x.restore();
+    // sol cerca del horizonte
+    g = x.createRadialGradient(690, HZ - 6, 4, 690, HZ - 6, 190);
+    g.addColorStop(0, '#fffbe6'); g.addColorStop(0.18, 'rgba(255,230,160,.85)'); g.addColorStop(1, 'rgba(255,220,150,0)');
+    x.fillStyle = g; x.fillRect(0, 0, W, HZ + 40);
+    // isla lejana
+    x.fillStyle = '#4f6f78'; x.beginPath(); x.moveTo(0, HZ); x.lineTo(0, 296); x.quadraticCurveTo(90, 270, 170, 300); x.quadraticCurveTo(230, 316, 300, HZ); x.closePath(); x.fill();
+    // mar
+    g = x.createLinearGradient(0, HZ, 0, 478); g.addColorStop(0, '#6cc0d2'); g.addColorStop(0.5, '#2f95b0'); g.addColorStop(1, '#17718f');
+    x.fillStyle = g; x.fillRect(0, HZ, W, 150);
+    // reflejo del sol
+    for (let i = 0; i < 46; i++) {
+      const y = HZ + 3 + i * 3.1, w = 12 + i * 2.6;
+      x.fillStyle = `rgba(255,236,190,${Math.max(0, .75 - i * .015)})`; x.fillRect(690 - w / 2 + Math.sin(i * 1.7) * 7, y, w, 1.6);
+    }
+    // olas finas
+    x.strokeStyle = 'rgba(255,255,255,.16)'; x.lineWidth = 1.4;
+    for (let i = 0; i < 12; i++) { const y = HZ + 22 + i * 12; x.beginPath(); for (let px = 0; px <= W; px += 24) x.lineTo(px, y + Math.sin(px * .03 + i) * 1.8); x.stroke(); }
+    // velero
+    x.fillStyle = '#2b2f36'; x.beginPath(); x.moveTo(470, 372); x.lineTo(552, 372); x.lineTo(540, 386); x.lineTo(484, 386); x.closePath(); x.fill();
+    x.fillStyle = '#fbf7ee'; x.beginPath(); x.moveTo(510, 366); x.lineTo(510, 318); x.lineTo(550, 366); x.closePath(); x.fill();
+    x.fillStyle = '#f1d9b8'; x.beginPath(); x.moveTo(504, 366); x.lineTo(504, 330); x.lineTo(476, 366); x.closePath(); x.fill();
+    // arena
+    g = x.createLinearGradient(0, 478, 0, H); g.addColorStop(0, '#efd7a8'); g.addColorStop(1, '#cfae78');
+    x.fillStyle = g; x.beginPath(); x.moveTo(0, 492); x.quadraticCurveTo(240, 468, 480, 484); x.quadraticCurveTo(720, 498, W, 474); x.lineTo(W, H); x.lineTo(0, H); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 5; x.beginPath(); x.moveTo(0, 490); x.quadraticCurveTo(240, 466, 480, 482); x.quadraticCurveTo(720, 496, W, 472); x.stroke();
+    // palmera
+    x.lineCap = 'round';
+    x.strokeStyle = '#6a4a2c'; x.lineWidth = 17; x.beginPath(); x.moveTo(170, 640); x.quadraticCurveTo(205, 440, 252, 232); x.stroke();
+    x.strokeStyle = 'rgba(40,24,10,.35)'; x.lineWidth = 17; x.setLineDash([2, 13]); x.beginPath(); x.moveTo(170, 640); x.quadraticCurveTo(205, 440, 252, 232); x.stroke(); x.setLineDash([]);
+    const fronds = [[-170, -22], [-130, 36], [-60, 60], [20, 52], [110, 18], [150, -40], [-40, -96], [70, -86]];
+    for (const [dx, dy] of fronds) {
+      const x0 = 252, y0 = 232, cx = 252 + dx * .55, cy = 232 + dy - 50, ex = 252 + dx, ey = 232 + dy + 30;
+      x.strokeStyle = '#2d6a3a'; x.lineWidth = 5; x.beginPath(); x.moveTo(x0, y0); x.quadraticCurveTo(cx, cy, ex, ey); x.stroke();
+      for (let t = .12; t <= 1; t += .055) {
+        const u = 1 - t;
+        const px = u * u * x0 + 2 * u * t * cx + t * t * ex, py = u * u * y0 + 2 * u * t * cy + t * t * ey;
+        const tx = 2 * u * (cx - x0) + 2 * t * (ex - cx), ty = 2 * u * (cy - y0) + 2 * t * (ey - cy), len = Math.hypot(tx, ty) || 1;
+        const nx = -ty / len, ny = tx / len, L = 26 * (1 - t * .55);
+        for (const sg of [-1, 1]) {
+          x.strokeStyle = sg > 0 ? '#3f8a48' : '#2f7a3a'; x.lineWidth = 3.2;
+          x.beginPath(); x.moveTo(px, py);
+          x.lineTo(px + (nx * sg * .9 + tx / len * .55) * L, py + (ny * sg * .9 + ty / len * .55) * L + 6 * u); x.stroke();
+        }
+      }
+    }
+    x.fillStyle = '#4a321c'; for (const [ca, cb] of [[240, 244], [262, 246], [251, 256]]) { x.beginPath(); x.arc(ca, cb, 8, 0, 7); x.fill(); }
+    // detalles en la arena
+    let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 90; i++) { x.fillStyle = `rgba(120,90,50,${.12 + rnd() * .14})`; x.beginPath(); x.arc(rnd() * W, 520 + rnd() * 110, 1 + rnd() * 2, 0, 7); x.fill(); }
+    x.filter = 'blur(0.8px)'; x.drawImage(c, 0, 0); x.filter = 'none';
     return c;
   }
 
@@ -137,7 +177,7 @@
       const b = document.createElement('button');
       b.className = 'cat'; b.type = 'button'; b.role = 'tab';
       b.setAttribute('aria-selected', c.id === state.cat);
-      b.innerHTML = `${c.name}<small>${n}</small>`;
+      b.textContent = c.name;
       b.addEventListener('click', () => { state.cat = c.id; renderCats(); renderStrip(); $('strip').scrollLeft = 0; });
       box.append(b);
     }
@@ -145,7 +185,7 @@
 
   function thumbFor(p) {
     if (state.thumbs.has(p.id)) return state.thumbs.get(p.id);
-    const TW = 236, TH = 176, bmp = state.thumbSrc, { w, h } = dims(bmp);
+    const TW = 176, TH = 176, bmp = state.thumbSrc, { w, h } = dims(bmp);
     if (!state.thumbBase) {
       const s = Math.max(TW / w, TH / h);
       const base = document.createElement('canvas'); base.width = TW; base.height = TH;
@@ -175,9 +215,7 @@
       const src = thumbFor(p);
       const cv = document.createElement('canvas'); cv.width = src.width; cv.height = src.height;
       cv.getContext('2d').drawImage(src, 0, 0);
-      const cap = document.createElement('div'); cap.className = 'cap';
-      cap.innerHTML = `<i>${String(i).padStart(2, '0')}</i><span></span>`;
-      cap.querySelector('span').textContent = p.name;
+      const cap = document.createElement('span'); cap.className = 'cap'; cap.textContent = p.name;
       b.append(cv, cap);
       b.addEventListener('click', () => selectPreset(p.id));
       reel.append(b);
@@ -189,7 +227,7 @@
     for (const b of $('reel').children) b.setAttribute('aria-pressed', b.dataset.id === id);
     const p = id === 'none' ? { name: 'Original', desc: 'Sin filtro' } : presetById(id);
     $('about').textContent = p ? p.desc : '';
-    $('badge').textContent = p ? p.name : '';
+    $('pname').textContent = p ? p.name : '';
     $('cube').disabled = id === 'none';
     requestPreview();
   }
@@ -216,6 +254,7 @@
       const img = new ImageData(new Uint8ClampedArray(m.buffer), m.width, m.height);
       state.proc = img;
       $('view').getContext('2d').putImageData(img, 0, 0);
+      if (!state.painted) { state.painted = true; hideSplash(); }
       if (state.dirty) requestPreview();
     } else if (m.kind === 'tbegin' || m.kind === 'tstrip' || m.kind === 'tend') {
       if (pending.has(m.id)) { pending.get(m.id)({ buffer: m.bytes, bytes: m.bytes }); pending.delete(m.id); }
@@ -233,24 +272,12 @@
     state.idleTimer = setTimeout(() => { renderFull().then(() => setStatus('Lista para guardar')).catch(() => {}); }, 1400);
   }
 
-  /* ---------- comparar con el original (arrastrar) ---------- */
-  const win = $('window'), handle = $('handle');
-  function setCmp(p) {
-    p = Math.max(0, Math.min(100, p)); state.cmp = p;
-    $('stage').style.setProperty('--cmp', p + '%');
-    handle.setAttribute('aria-valuenow', Math.round(p));
-  }
-  let dragging = false;
-  handle.addEventListener('pointerdown', (e) => { dragging = true; handle.setPointerCapture(e.pointerId); });
-  handle.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    const r = win.getBoundingClientRect(); setCmp((e.clientX - r.left) / r.width * 100);
-  });
-  ['pointerup', 'pointercancel'].forEach((t) => handle.addEventListener(t, () => { dragging = false; }));
-  handle.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') { setCmp(state.cmp + 5); e.preventDefault(); }
-    if (e.key === 'ArrowLeft') { setCmp(state.cmp - 5); e.preventDefault(); }
-  });
+  /* ---------- ver el original: mantener presionada la foto ---------- */
+  const win = $('window');
+  const showOrig = (on) => { $('viewOrig').style.opacity = on ? 1 : 0; $('badge').classList.toggle('on', on); };
+  win.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; showOrig(true); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => win.addEventListener(t, () => showOrig(false)));
+  win.addEventListener('contextmenu', (e) => e.preventDefault());
 
   /* ---------- metadatos JPEG (EXIF + perfil de color) ---------- */
   function parseJpeg(u) {
@@ -330,7 +357,7 @@
 
   /* ---------- exportar a resolución completa ---------- */
   function renderFull() {
-    const fmt = $('fmt').value, keep = $('keepmeta').checked;
+    const fmt = getFmt(), keep = $('keepmeta').checked;
     const key = JSON.stringify([state.file.name, state.file.size, state.presetId, getParams(), fmt, keep]);
     if (state.cache && state.cache.key === key) return Promise.resolve(state.cache);
     if (state.renderP && state.renderKey === key) return state.renderP;
@@ -437,12 +464,12 @@
   async function onSave() {
     if (state.demo) { $('file').click(); return; }
     if (state.saving) return;
-    const wasReady = !!(state.cache && state.cache.key === JSON.stringify([state.file.name, state.file.size, state.presetId, getParams(), $('fmt').value, $('keepmeta').checked]));
+    const wasReady = !!(state.cache && state.cache.key === JSON.stringify([state.file.name, state.file.size, state.presetId, getParams(), getFmt(), $('keepmeta').checked]));
     setSaving(true, wasReady ? 'Abriendo…' : 'Preparando foto…');
     state.onProgress = (p) => { $('save').textContent = `Procesando ${p}%`; };
     try {
       const r = await renderFull();
-      if (r.tiled && $('fmt').value === 'png') toast('Foto muy grande: se guardó como JPG para conservar todos sus píxeles.', 5000);
+      if (r.tiled && getFmt() === 'png') toast('Foto muy grande: se guardó como JPG para conservar todos sus píxeles.', 5000);
       const f = new File([r.blob], r.name, { type: r.blob.type });
       if (IS_MOBILE && navigator.canShare && navigator.canShare({ files: [f] })) {
         await navigator.share({ files: [f] });
@@ -498,13 +525,21 @@
   for (const id of ['intensity', 'grain', 'ev', 'temp', 'sat', 'contrast']) {
     $(id).addEventListener('input', () => { refreshOutputs(); state.cache = null; state.renderKey = null; requestPreview(); });
   }
-  for (const id of ['fmt', 'keepmeta']) $(id).addEventListener('change', () => { state.cache = null; state.renderKey = null; scheduleIdle(); });
+  for (const el of document.querySelectorAll('input[name=fmt], #keepmeta')) el.addEventListener('change', () => { state.cache = null; state.renderKey = null; scheduleIdle(); });
   $('save').addEventListener('click', onSave);
   $('saveFile').addEventListener('click', onSaveFile);
   $('cube').addEventListener('click', onCube);
   refreshOutputs();
   renderCats();
   self.__presetsTest = { renderFull, state, selectPreset, loadFile };
+
+  /* ---------- pantalla de carga ---------- */
+  const SPLASH_MIN_MS = 1500;
+  function hideSplash() {
+    const el = $('splash'); if (!el) return;
+    const wait = Math.max(0, SPLASH_MIN_MS - performance.now());
+    setTimeout(() => { el.classList.add('done'); setTimeout(() => el.remove(), 700); }, wait);
+  }
 
   /* ---------- arranque ---------- */
   setSource(makeSample(), true, 'Foto de ejemplo');

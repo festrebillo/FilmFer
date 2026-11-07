@@ -3,219 +3,269 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#e3e8e9" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14181a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="FilmFer">
 <meta name="color-scheme" content="light dark">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <title>FilmFer</title>
 <style>
-  /* Mesa de luz: la foto va en un marco de diapositiva y los presets son fotogramas de un rollo. */
   :root{
-    --table:#e3e8e9; --table-hi:#f1f4f4; --paper:#f6f8f8; --line:#c9d1d3;
-    --ink:#14181a; --mut:#566266;
-    --mount:#101214; --reel:#17191b; --hole:var(--table); --edge:#e2a13a; --edge-dim:#8d8a80;
-    --mask:#e0702a; --mask-ink:#1d0e04; --acetate:#1f7a85;
-    --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
-    --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --bg:#f2f2f7; --card:#ffffff; --label:#000; --label2:#6c6c70; --sep:#c6c6c8; --fill:#e9e9ee; --fill-strong:#dcdce1;
+    --tint:#0066d6; --tint-fill:#0066d6; --tint-ink:#fff; --glass:rgba(249,249,251,.78); --shadow:0 6px 24px -8px rgba(0,0,0,.22);
+    --green:#34c759; --switch-off:#e3e3e8;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   }
   @media (prefers-color-scheme: dark){
-    :root{--table:#14181a; --table-hi:#1c2224; --paper:#1d2326; --line:#2f393c; --ink:#e8eeee; --mut:#93a1a5;
-          --acetate:#4fb3bf; --hole:#3b4348}
+    :root{--bg:#000; --card:#1c1c1e; --label:#fff; --label2:#98989f; --sep:#38383a; --fill:#2c2c2e; --fill-strong:#3a3a3c;
+          --tint:#0a84ff; --tint-fill:#0a72e8; --glass:rgba(28,28,30,.72); --shadow:0 6px 24px -8px rgba(0,0,0,.7); --switch-off:#39393d}
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html{background:var(--table)}
-  body{margin:0;min-height:100vh;color:var(--ink);font:15px/1.45 var(--body);
-       background:radial-gradient(120% 70% at 50% 0%,var(--table-hi),var(--table));
-       padding:max(12px,env(safe-area-inset-top)) 0 0}
-  button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
-  :focus-visible{outline:2px solid var(--acetate);outline-offset:2px}
+  html{background:var(--bg)}
+  body{margin:0;min-height:100vh;color:var(--label);background:var(--bg);font:16px/1.4 var(--font);-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;border:0;background:none;padding:0}
+  :focus-visible{outline:3px solid color-mix(in srgb,var(--tint) 55%,transparent);outline-offset:2px}
+  .press{transition:opacity .12s,transform .12s}
+  .press:active{opacity:.6;transform:scale(.98)}
 
-  .app{max-width:1180px;margin:0 auto;padding:0 16px}
-  .top{display:flex;align-items:center;justify-content:space-between;min-height:48px}
-  .brand{display:flex;align-items:center;gap:10px}
-  .brand svg{width:30px;height:24px;flex:none}
-  .wordmark{font:800 30px/1 var(--display);letter-spacing:.03em}
-  .top small{color:var(--mut);font-size:12px;margin-left:2px;align-self:flex-end;padding-bottom:3px}
-  .ghost{background:none;border:1px solid var(--line);border-radius:8px;padding:8px 14px;min-height:40px}
-  .ghost:hover{border-color:var(--ink)}
+  /* ---- Barra superior (cristal) ---- */
+  .nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+       padding:max(8px,env(safe-area-inset-top)) 16px 8px;min-height:52px;
+       background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);
+       border-bottom:.5px solid color-mix(in srgb,var(--sep) 70%,transparent)}
+  .brand{display:flex;align-items:center;gap:9px}
+  .app-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(160deg,#3a3a3d,#0b0b0c);display:grid;place-items:center;flex:none;
+            box-shadow:0 0 0 .5px #0004 inset}
+  .app-icon svg{width:20px;height:16px}
+  .brand b{font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .brand small{color:var(--label2);font-size:12px;margin-left:2px}
+  .textbtn{color:var(--tint);font-size:17px;padding:8px 2px}
+  .textbtn[hidden]{display:none}
 
-  .layout{display:grid;gap:14px;margin-top:6px}
+  .app{max-width:1100px;margin:0 auto;padding:0 16px}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;padding-top:14px}
+  .stage-col,.tools{min-width:0}
 
-  /* ---- Marco de diapositiva ---- */
-  .mount{background:var(--mount);border-radius:6px;padding:10px 10px 0;
-         box-shadow:0 14px 28px -16px #0007,0 1px 0 #ffffff14 inset}
-  .window{position:relative;background:#000;overflow:hidden;touch-action:pan-y;line-height:0}
-  .window canvas{display:block;width:100%;height:auto;max-height:64vh;object-fit:contain;margin:0 auto}
-  #viewOrig{position:absolute;inset:0;margin:auto;clip-path:inset(0 calc(100% - var(--cmp,0%)) 0 0)}
-  .handle{position:absolute;top:0;bottom:0;left:var(--cmp,0%);width:44px;margin-left:-22px;display:grid;place-items:center;
-          cursor:ew-resize;touch-action:none;border:0;background:none;padding:0}
-  .handle::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 0 1px #0005}
-  .handle i{position:relative;width:34px;height:34px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;
-            box-shadow:0 2px 8px #0008;font-style:normal}
-  .handle svg{width:18px;height:18px}
-  .mount-label{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:42px;padding:0 2px;
-               font-family:var(--display);color:var(--edge)}
-  .mount-label b{font-weight:800;font-size:19px;letter-spacing:.04em}
-  .mount-label span{font:500 12px/1.2 var(--body);color:var(--edge-dim);text-align:right}
+  /* ---- Foto ---- */
+  .photo{position:relative;border-radius:20px;overflow:hidden;background:#000;box-shadow:var(--shadow);line-height:0;
+         touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .photo canvas{display:block;width:100%;height:auto;max-height:62vh;object-fit:contain;margin:0 auto}
+  #viewOrig{position:absolute;inset:0;margin:auto;opacity:0;transition:opacity .14s}
+  .chip{position:absolute;left:12px;top:12px;line-height:1;font-size:13px;font-weight:600;color:#fff;padding:7px 12px;border-radius:999px;
+        background:rgba(40,40,44,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);opacity:0;transform:translateY(-4px);
+        transition:opacity .14s,transform .14s;pointer-events:none}
+  .chip.on{opacity:1;transform:none}
+  .info{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 4px 0}
+  .info h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+  .info p{margin:2px 0 0;color:var(--label2);font-size:15px;line-height:1.35}
+  .status{color:var(--label2);font-size:13px;padding-top:6px;text-align:right;white-space:nowrap}
+  .hint{margin:8px 4px 0;color:var(--label2);font-size:13px}
 
-  /* ---- Rollo de presets ---- */
-  .tools{min-width:0}
-  .cats{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
+  /* ---- Categorías y filtros (como en Fotos) ---- */
+  .cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:16px -16px 0;padding:2px 16px}
   .cats::-webkit-scrollbar{display:none}
-  .cat{flex:none;background:none;border:0;border-bottom:3px solid transparent;padding:12px 12px 9px;color:var(--mut);font-weight:500;
-       white-space:nowrap;margin-bottom:-1px}
-  .cat small{margin-left:5px;font-size:11px;opacity:.75}
-  .cat[aria-selected=true]{color:var(--ink);border-bottom-color:var(--mask)}
-  .strip{overflow-x:auto;scrollbar-width:thin;margin:10px -16px 0;background:var(--reel);scroll-snap-type:x proximity;overscroll-behavior-x:contain;scroll-padding-left:16px}
-  .reel{position:relative;display:flex;gap:8px;width:max-content;min-width:100%;padding:24px 16px 32px}
-  .reel::before,.reel::after{content:"";position:absolute;left:0;right:0;height:8px;
-        background:repeating-linear-gradient(90deg,var(--hole) 0 9px,transparent 9px 21px);opacity:.9}
-  .reel::before{top:8px}.reel::after{bottom:8px}
-  .frame{flex:none;width:118px;background:none;border:0;padding:0;text-align:left;scroll-snap-align:start;color:var(--edge-dim)}
-  .frame canvas{display:block;width:118px;height:88px;background:#000;outline:2px solid transparent;outline-offset:2px;border-radius:1px}
-  .frame .cap{display:flex;gap:6px;align-items:baseline;margin-top:6px;font-family:var(--display);font-size:15px;letter-spacing:.04em;font-weight:600;
-              white-space:nowrap;overflow:hidden}
-  .frame .cap i{font-style:normal;color:var(--edge);opacity:.85}
-  .frame .cap span{overflow:hidden;text-overflow:ellipsis}
-  .frame[aria-pressed=true] canvas{outline-color:var(--acetate)}
-  .frame[aria-pressed=true] .cap{color:#fff}
-  .frame:hover canvas{outline-color:#ffffff55}
-  .frame[aria-pressed=true]:hover canvas{outline-color:var(--acetate)}
-  .about{margin:10px 2px 0;color:var(--mut);font-size:13px;min-height:20px}
+  .cat{flex:none;padding:8px 15px;border-radius:999px;background:var(--fill);color:var(--label);font-size:15px;font-weight:500;white-space:nowrap}
+  .cat[aria-selected=true]{background:var(--tint-fill);color:var(--tint-ink)}
+  .strip{overflow-x:auto;scrollbar-width:none;margin:12px -16px 0;scroll-snap-type:x proximity;scroll-padding-left:16px;overscroll-behavior-x:contain}
+  .strip::-webkit-scrollbar{display:none}
+  .reel{display:flex;gap:12px;width:max-content;min-width:100%;padding:4px 16px 8px}
+  .frame{flex:none;width:88px;text-align:center;scroll-snap-align:start}
+  .frame canvas{display:block;width:88px;height:88px;border-radius:15px;background:#000;box-shadow:0 0 0 0 var(--tint);transition:box-shadow .12s}
+  .frame .cap{display:block;margin-top:7px;font-size:12px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .frame[aria-pressed=true] canvas{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--tint)}
+  .frame[aria-pressed=true] .cap{color:var(--tint);font-weight:600}
 
-  .intensity{display:grid;grid-template-columns:auto 1fr 40px;gap:12px;align-items:center;margin-top:8px}
-  .intensity label{font-weight:600}
-  output{font-variant-numeric:tabular-nums;text-align:right;font-size:13px;color:var(--mut)}
-  input[type=range]{width:100%;height:36px;margin:0;accent-color:var(--ink)}
-  .legal{margin:16px 2px 0;color:var(--mut);font-size:12px}
+  /* ---- Grupos y controles estilo iOS ---- */
+  .group{background:var(--card);border-radius:14px;overflow:hidden;margin-top:14px}
+  .row{padding:12px 16px}
+  .row+.row{border-top:.5px solid var(--sep)}
+  .row .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .row .top label{font-size:16px}
+  output{font-variant-numeric:tabular-nums;color:var(--label2);font-size:15px}
+  .flex-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;margin:0;background:transparent}
+  input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--fill-strong) var(--lo,0%),var(--tint-fill) var(--lo,0%),var(--tint-fill) var(--hi,50%),var(--fill-strong) var(--hi,50%))}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-12px;border-radius:50%;background:#fff;
+        box-shadow:0 1px 5px rgba(0,0,0,.35),0 0 0 .5px rgba(0,0,0,.12)}
+  input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--fill-strong)}
+  input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--tint-fill)}
+  input[type=range]::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.35)}
+  .seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;gap:2px;width:100%}
+  .seg label{flex:1;position:relative}
+  .seg input{position:absolute;opacity:0;inset:0}
+  .seg span{display:block;text-align:center;padding:7px 4px;border-radius:7px;font-size:13px;font-weight:500;transition:background .15s}
+  .seg input:checked+span{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.18);font-weight:600}
+  .seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--tint) 55%,transparent)}
+  .switch{-webkit-appearance:none;appearance:none;flex:none;width:51px;height:31px;border-radius:16px;background:var(--switch-off);position:relative;margin:0;cursor:pointer;transition:background .2s}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.3);transition:transform .2s}
+  .switch:checked{background:var(--green)}
+  .switch:checked::after{transform:translateX(20px)}
+  .listbtn{display:block;width:100%;text-align:left;padding:13px 16px;color:var(--tint);font-size:16px}
+  .listbtn:disabled{color:var(--label2);opacity:.6}
+  .row small{display:block;color:var(--label2);font-size:12px;margin-top:6px}
+  .foot{margin:12px 6px 0;color:var(--label2);font-size:12px}
 
   /* ---- Barra inferior ---- */
-  .dock{position:sticky;bottom:0;display:flex;gap:10px;padding:12px 0 max(12px,env(safe-area-inset-bottom));margin-top:10px;
-        background:linear-gradient(to top,var(--table) 70%,transparent)}
-  .btn{border:1px solid var(--line);background:var(--paper);border-radius:8px;min-height:50px;padding:0 18px;font-weight:600}
-  .btn:hover{border-color:var(--ink)}
-  .btn.primary{flex:1;background:var(--mask);border-color:var(--mask);color:var(--mask-ink);font-size:16px;letter-spacing:.01em}
-  .btn.primary:hover{filter:brightness(1.06)}
-  .btn:disabled{opacity:.6;cursor:progress}
+  .dock{position:sticky;bottom:0;z-index:4;display:flex;gap:10px;margin:14px -16px 0;padding:10px 16px max(12px,env(safe-area-inset-bottom));
+        background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);
+        border-top:.5px solid color-mix(in srgb,var(--sep) 70%,transparent)}
+  .btn{height:50px;padding:0 20px;border-radius:14px;background:var(--fill);color:var(--tint);font-size:17px;font-weight:600;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+  .btn svg{width:20px;height:20px}
+  .btn.primary{flex:1;background:var(--tint-fill);color:var(--tint-ink)}
+  .btn:disabled{opacity:.55;cursor:progress}
 
-  /* ---- Ajustes (hoja inferior en celular, panel fijo en escritorio) ---- */
-  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--paper);border-radius:14px 14px 0 0;max-height:82vh;overflow:auto;
-         padding:6px 16px max(18px,env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .22s ease;
-         box-shadow:0 -12px 30px -10px #0006}
-  .sheet.open{transform:none}
-  .sheet-head{display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--paper);padding:10px 0 6px}
-  .sheet-head h2{margin:0;font:800 22px/1 var(--display);letter-spacing:.04em}
-  .backdrop{position:fixed;inset:0;background:#0006;z-index:10;opacity:0;pointer-events:none;transition:opacity .2s}
+  /* ---- Hoja de ajustes ---- */
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20;opacity:0;pointer-events:none;transition:opacity .25s}
   .backdrop.on{opacity:1;pointer-events:auto}
-  .ctl{display:grid;grid-template-columns:100px 1fr 44px;gap:10px;align-items:center;padding:3px 0}
-  .ctl label{color:var(--mut);font-size:14px}
-  .sheet h3{margin:14px 0 4px;font-size:13px;font-weight:600;color:var(--mut)}
-  .opts{display:grid;gap:10px;margin-top:8px}
-  .opts label{display:flex;gap:10px;align-items:center;font-size:14px}
-  select{font:inherit;color:var(--ink);background:var(--table);border:1px solid var(--line);border-radius:8px;padding:9px;max-width:100%}
-  .rowbtns{display:grid;gap:8px;margin-top:14px}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--bg);border-radius:20px 20px 0 0;max-height:88vh;overflow:auto;
+         padding:0 16px max(20px,env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .32s cubic-bezier(.32,.72,0,1);
+         box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+  .sheet.open{transform:none}
+  .grab{width:36px;height:5px;border-radius:3px;background:var(--fill-strong);margin:8px auto 0}
+  .sheet-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;position:sticky;top:0;background:var(--bg);padding:8px 0 10px}
+  .sheet-head h3{margin:0;font-size:17px;font-weight:600;grid-column:2}
+  .sheet-head .textbtn{grid-column:3;justify-self:end;font-weight:600}
+  .sheet .group:first-of-type{margin-top:4px}
 
-  /* ---- Aviso ---- */
-  .toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,12px);z-index:30;max-width:min(92vw,420px);
-         background:var(--ink);color:var(--table);padding:11px 16px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;
-         transition:opacity .2s,transform .2s}
+  .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translate(-50%,10px);z-index:50;max-width:min(92vw,420px);
+         background:rgba(58,58,62,.92);color:#fff;padding:12px 18px;border-radius:16px;font-size:14px;text-align:center;opacity:0;pointer-events:none;
+         -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);transition:opacity .25s,transform .25s}
   .toast.on{opacity:1;transform:translate(-50%,0)}
 
+  /* ---- Pantalla de carga ---- */
+  .splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+          transition:opacity .45s ease,visibility .45s;animation:splash-safety 0s 8s forwards}
+  .splash.done{opacity:0;visibility:hidden}
+  @keyframes splash-safety{to{opacity:0;visibility:hidden}}
+  .splash-icon{width:104px;height:104px;border-radius:24px;background:linear-gradient(160deg,#3a3a3d,#0b0b0c);display:grid;place-items:center;
+               box-shadow:0 18px 40px -14px rgba(0,0,0,.55),0 0 0 .5px #0004 inset;animation:pop .8s cubic-bezier(.2,.9,.25,1.15) both}
+  .splash-icon svg{width:64px;height:51px}
+  .splash-icon .film{animation:develop 1.1s .35s ease-out both}
+  .splash-icon .holes{animation:fade .5s .2s both}
+  .splash-name{font-size:30px;font-weight:700;letter-spacing:-.02em;animation:rise .7s .3s cubic-bezier(.2,.8,.2,1) both}
+  .splash-sub{color:var(--label2);font-size:14px;margin-top:-12px;animation:rise .7s .45s cubic-bezier(.2,.8,.2,1) both}
+  .splash-bar{width:120px;height:3px;border-radius:2px;background:var(--fill-strong);overflow:hidden;margin-top:14px;animation:fade .4s .5s both}
+  .splash-bar i{display:block;height:100%;width:0;background:var(--tint);border-radius:2px;animation:load 1.5s .5s cubic-bezier(.3,.7,.2,1) forwards}
+  .splash.done .splash-bar i{width:100%!important;animation:none}
+  @keyframes pop{0%{opacity:0;transform:scale(.7)}100%{opacity:1;transform:scale(1)}}
+  @keyframes develop{0%{opacity:0;filter:saturate(0) brightness(.4)}100%{opacity:1;filter:none}}
+  @keyframes rise{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+  @keyframes fade{0%{opacity:0}100%{opacity:1}}
+  @keyframes load{0%{width:0}100%{width:88%}}
+
   @media (min-width:960px){
-    .layout{grid-template-columns:minmax(0,1fr) 440px;gap:28px;align-items:start;margin-top:14px}
+    .layout{grid-template-columns:minmax(0,1fr) 420px;gap:0 32px;align-items:start;padding-top:22px}
+    .stage-col{position:sticky;top:76px}
+    .photo canvas{max-height:76vh}
     .tools{display:flex;flex-direction:column}
-    .dock{order:1}.sheet{order:2}.legal{order:3}
-    .stage-col{position:sticky;top:12px}
-    .window canvas{max-height:78vh}
-    .dock{background:none;position:static;padding:14px 0 0}
-    #openSheet,.sheet-head button,.backdrop{display:none}
-    .sheet{position:static;transform:none;border-radius:10px;max-height:none;box-shadow:none;border:1px solid var(--line);margin-top:14px;padding:4px 16px 16px;transition:none}
-    .sheet-head{position:static;padding:10px 0 4px}
-    .strip,.cats{margin-left:0;margin-right:0}
-    .cats{padding:0}
-    .reel{padding-left:12px}
-    .toast{bottom:24px}
+    .tools .cats,.tools .strip{margin-left:0;margin-right:0}
+    .cats{padding-left:0;padding-right:0;margin-top:0}
+    .reel{padding-left:4px;padding-right:4px}
+    .dock{order:1;position:static;margin:14px 0 0;padding:0;background:none;border:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+    .sheet{order:2}
+    .foot{order:3}
+    #openSheet,.sheet-head .textbtn,.backdrop,.grab{display:none}
+    .sheet{position:static;transform:none;border-radius:0;max-height:none;box-shadow:none;padding:0;overflow:visible;transition:none;background:none}
+    .sheet-head{position:static;background:none;grid-template-columns:1fr;padding:18px 0 4px}
+    .sheet-head h3{grid-column:1;font-size:13px;color:var(--label2);font-weight:600}
+    .toast{bottom:28px}
   }
-  @media (prefers-reduced-motion:reduce){.sheet,.toast,.backdrop{transition:none}}
+  @media (prefers-reduced-motion:reduce){
+    .splash-icon,.splash-icon .film,.splash-icon .holes,.splash-name,.splash-sub,.splash-bar,.splash-bar i{animation-duration:.01s;animation-delay:0s}
+    .sheet,.toast,.backdrop,.chip,.splash{transition-duration:.01s}
+  }
 </style>
 </head>
 <body>
-<div class="app" id="app">
-  <header class="top">
-    <div class="brand">
-      <svg viewBox="0 0 30 24" aria-hidden="true"><rect x="1.5" y="1.5" width="27" height="21" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="6" y="5" width="18" height="14" rx="1" fill="var(--mask)"/><g fill="currentColor"><rect x="4" y="0" width="3" height="3"/><rect x="13.5" y="0" width="3" height="3"/><rect x="23" y="0" width="3" height="3"/><rect x="4" y="21" width="3" height="3"/><rect x="13.5" y="21" width="3" height="3"/><rect x="23" y="21" width="3" height="3"/></g></svg>
-      <span class="wordmark">FilmFer</span><small id="ver"></small>
-    </div>
-    <button class="ghost" id="change" hidden>Otra foto</button>
-  </header>
 
-  <input id="file" type="file" accept="image/*" hidden>
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="splash-icon">
+    <svg viewBox="0 0 30 24"><rect x="1.5" y="1.5" width="27" height="21" rx="3" fill="none" stroke="#fff" stroke-width="1.8"/>
+      <rect class="film" x="6" y="5.2" width="18" height="13.6" rx="1.2" fill="#ff9f0a"/>
+      <g class="holes" fill="#fff"><rect x="4" y="0" width="3" height="3"/><rect x="13.5" y="0" width="3" height="3"/><rect x="23" y="0" width="3" height="3"/><rect x="4" y="21" width="3" height="3"/><rect x="13.5" y="21" width="3" height="3"/><rect x="23" y="21" width="3" height="3"/></g></svg>
+  </div>
+  <div class="splash-name">FilmFer</div>
+  <div class="splash-sub">Presets para tus fotos</div>
+  <div class="splash-bar"><i></i></div>
+</div>
 
+<header class="nav">
+  <div class="brand">
+    <span class="app-icon"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="1.5" y="1.5" width="27" height="21" rx="3" fill="none" stroke="#fff" stroke-width="2"/><rect x="6" y="5.2" width="18" height="13.6" rx="1.2" fill="#ff9f0a"/></svg></span>
+    <b>FilmFer</b><small id="ver"></small>
+  </div>
+  <button class="textbtn press" id="change" hidden>Otra foto</button>
+</header>
+
+<input id="file" type="file" accept="image/*" hidden>
+
+<div class="app">
   <main class="layout">
     <section class="stage-col" aria-label="Foto">
-      <div class="mount" id="stage">
-        <div class="window" id="window">
-          <canvas id="view" aria-label="Foto con el preset aplicado"></canvas>
-          <canvas id="viewOrig" aria-hidden="true"></canvas>
-          <button class="handle" id="handle" role="slider" aria-label="Comparar con el original" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-            <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></i>
-          </button>
-        </div>
-        <div class="mount-label"><b id="badge">Original</b><span id="status">Foto de ejemplo</span></div>
+      <div class="photo" id="window">
+        <canvas id="view" aria-label="Foto con el preset aplicado"></canvas>
+        <canvas id="viewOrig" aria-hidden="true"></canvas>
+        <div class="chip" id="badge">Original</div>
       </div>
+      <div class="info">
+        <div><h2 id="pname">Original</h2><p id="about"></p></div>
+        <div class="status" id="status"></div>
+      </div>
+      <div class="hint">Mantén presionada la foto para ver el original.</div>
     </section>
 
     <section class="tools" aria-label="Presets">
       <div class="cats" id="cats" role="tablist" aria-label="Categorías"></div>
       <div class="strip" id="strip"><div class="reel" id="reel"></div></div>
-      <div class="about" id="about"></div>
 
-      <div class="intensity">
-        <label for="intensity">Intensidad</label>
-        <input id="intensity" type="range" min="0" max="100" value="100">
-        <output></output>
+      <div class="group">
+        <div class="row">
+          <div class="top"><label for="intensity">Intensidad</label><output></output></div>
+          <input id="intensity" type="range" min="0" max="100" value="100">
+        </div>
       </div>
 
+      <div class="backdrop" id="backdrop"></div>
       <div class="sheet" id="sheet" role="dialog" aria-label="Ajustes">
-        <div class="sheet-head"><h2>Ajustes</h2><button class="ghost" id="closeSheet" type="button">Listo</button></div>
-        <div class="ctl"><label for="grain">Grano</label><input id="grain" type="range" min="0" max="150" value="100"><output></output></div>
-        <div class="ctl"><label for="ev">Exposición</label><input id="ev" type="range" min="-100" max="100" value="0"><output></output></div>
-        <div class="ctl"><label for="temp">Calidez</label><input id="temp" type="range" min="-100" max="100" value="0"><output></output></div>
-        <div class="ctl"><label for="sat">Saturación</label><input id="sat" type="range" min="-100" max="100" value="0"><output></output></div>
-        <div class="ctl"><label for="contrast">Contraste</label><input id="contrast" type="range" min="-100" max="100" value="0"><output></output></div>
-        <h3>Al guardar</h3>
-        <div class="opts">
-          <label>Formato
-            <select id="fmt">
-              <option value="jpg100">JPG calidad máxima (100%)</option>
-              <option value="jpg95">JPG alta (95%)</option>
-              <option value="png">PNG sin pérdida (pesa más)</option>
-            </select>
-          </label>
-          <label><input type="checkbox" id="keepmeta" checked> Conservar datos de la foto (cámara, fecha) y color</label>
+        <div class="grab"></div>
+        <div class="sheet-head"><h3>Ajustes</h3><button class="textbtn press" id="closeSheet" type="button">Listo</button></div>
+        <div class="group">
+          <div class="row"><div class="top"><label for="grain">Grano</label><output></output></div><input id="grain" type="range" min="0" max="150" value="100"></div>
+          <div class="row"><div class="top"><label for="ev">Exposición</label><output></output></div><input id="ev" type="range" min="-100" max="100" value="0"></div>
+          <div class="row"><div class="top"><label for="temp">Calidez</label><output></output></div><input id="temp" type="range" min="-100" max="100" value="0"></div>
+          <div class="row"><div class="top"><label for="sat">Saturación</label><output></output></div><input id="sat" type="range" min="-100" max="100" value="0"></div>
+          <div class="row"><div class="top"><label for="contrast">Contraste</label><output></output></div><input id="contrast" type="range" min="-100" max="100" value="0"></div>
         </div>
-        <div class="rowbtns">
-          <button class="btn" id="saveFile" type="button">Descargar como archivo</button>
-          <button class="btn" id="cube" type="button">Descargar este preset como LUT (.cube) para video</button>
+        <div class="group">
+          <div class="row">
+            <div class="seg" role="radiogroup" aria-label="Formato al guardar">
+              <label><input type="radio" name="fmt" value="jpg100" checked><span>JPG máxima</span></label>
+              <label><input type="radio" name="fmt" value="jpg95"><span>JPG alta</span></label>
+              <label><input type="radio" name="fmt" value="png"><span>PNG</span></label>
+            </div>
+            <small>PNG no pierde calidad pero pesa más. Las fotos muy grandes se guardan siempre como JPG.</small>
+          </div>
+          <div class="row flex-row"><label for="keepmeta">Conservar datos de la foto y color</label><input class="switch" type="checkbox" id="keepmeta" checked></div>
+        </div>
+        <div class="group">
+          <div class="row" style="padding:0"><button class="listbtn press" id="saveFile" type="button">Descargar como archivo</button></div>
+          <div class="row" style="padding:0"><button class="listbtn press" id="cube" type="button">Descargar preset como LUT (.cube) para video</button></div>
         </div>
       </div>
 
-      <p class="legal">Tu foto se procesa en este dispositivo. No se sube a ningún servidor.</p>
+      <p class="foot">Tu foto se procesa en este dispositivo. No se sube a ningún servidor.</p>
 
       <div class="dock" id="dock">
-        <button class="btn" id="openSheet" type="button">Ajustes</button>
-        <button class="btn primary" id="save" type="button">Elegir mi foto</button>
+        <button class="btn press" id="openSheet" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>Ajustes</button>
+        <button class="btn primary press" id="save" type="button">Elegir mi foto</button>
       </div>
     </section>
   </main>
 </div>
-<div class="backdrop" id="backdrop"></div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="engine.js"></script>
