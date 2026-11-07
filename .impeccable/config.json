@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "C:/Proyectos Claude/PresetsFotos/index.html"
+        ],
+        "createdAt": "2026-11-07T02:11:29.660Z",
+        "reason": "Falso positivo: el radial-gradient es el sol dibujado dentro de la foto de ejemplo de la intro (contenido de la ilustracion, no un halo decorativo de fondo); la pagina no es oscura. Decidido por Claude, sin confirmacion del usuario."
+      }
+    ]
+  }
+}
