@@ -207,16 +207,19 @@
     const spatial = opts.spatial !== false;
     const seed = opts.seed || 1;
     const P = prepare(preset, opts.adj, opts);
-    const maxDim = Math.max(w, h);
+    // Si se procesa por franjas: fullW/fullH = tamaño de la foto entera, y0 = fila donde empieza esta franja
+    const FW = opts.fullW || w, FH = opts.fullH || h, Y0 = opts.y0 || 0;
+    const maxDim = Math.max(FW, FH);
     const cell = Math.max(1, Math.round(P.grainSize * maxDim / 2000));
     const doGrain = spatial && P.grainAmt > 0;
     const vig = spatial ? P.vig : 0;
-    const hw = w / 2, hh = h / 2;
+    const hw = FW / 2, hh = FH / 2;
     const GR = 0.09; // amplitud máxima del grano (fracción de 1)
 
     for (let y = 0, i = 0; y < h; y++) {
-      const gy = (y / cell) | 0;
-      const ny = (y - hh) / hh;
+      const Y = y + Y0;
+      const gy = (Y / cell) | 0;
+      const ny = (Y - hh) / hh;
       for (let x = 0; x < w; x++, i += 4) {
         const r0 = data[i] / 255, g0 = data[i + 1] / 255, b0 = data[i + 2] / 255;
         core(r0, g0, b0, P);
@@ -243,7 +246,7 @@
           r = r0 + (r - r0) * intensity; g = g0 + (g - g0) * intensity; b = b0 + (b - b0) * intensity;
         }
         // Dither triangular de ±1 nivel: evita bandas en degradados al pasar a 8 bits
-        const dn = (hash(x, y, 91) + hash(x, y, 92) - 1) * 1.0;
+        const dn = (hash(x, Y, 91) + hash(x, Y, 92) - 1) * 1.0;
         data[i] = clamp01(r) * 255 + dn + 0.5;
         data[i + 1] = clamp01(g) * 255 + dn + 0.5;
         data[i + 2] = clamp01(b) * 255 + dn + 0.5;

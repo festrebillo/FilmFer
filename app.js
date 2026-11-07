@@ -1,13 +1,16 @@
 (() => {
   'use strict';
-  const VERSION = '1.1.0';
+  const VERSION = '1.2.0';
   const $ = (id) => document.getElementById(id);
   $('ver').textContent = 'v' + VERSION;
 
   const ua = navigator.userAgent;
   const IS_IOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
   const IS_MOBILE = IS_IOS || /Android/.test(ua);
-  const MAX_EXPORT_PX = IS_IOS ? 16777216 : 64000000; // límite de lienzo del navegador
+  // Por encima de este tamaño la foto no cabe en un lienzo del navegador y se guarda por franjas (sin recortarla).
+  const QMAX = +new URLSearchParams(location.search).get('maxpx');
+  const MAX_EXPORT_PX = QMAX > 0 ? QMAX : (IS_IOS ? 16000000 : 64000000);
+  const STRIP_ROWS = 256; // múltiplo de 16
   const PREVIEW_MAX = 1280;
 
   const PRESETS = self.PRESETS;
@@ -123,7 +126,7 @@
     state.file = file;
     const { w, h } = dims(bmp);
     setSource(bmp, false, `${w}×${h} px`);
-    if (w * h > MAX_EXPORT_PX) toast('La foto es más grande de lo que este navegador puede guardar; se reducirá un poco.', 5000);
+    if (w * h > MAX_EXPORT_PX) toast(`Foto de ${(w * h / 1e6).toFixed(0)} MP: se guardará completa, sin recortar. Tardará un poco más.`, 5000);
   }
 
   /* ---------- categorías y rollo ---------- */
@@ -214,6 +217,8 @@
       state.proc = img;
       $('view').getContext('2d').putImageData(img, 0, 0);
       if (state.dirty) requestPreview();
+    } else if (m.kind === 'tbegin' || m.kind === 'tstrip' || m.kind === 'tend') {
+      if (pending.has(m.id)) { pending.get(m.id)({ buffer: m.bytes, bytes: m.bytes }); pending.delete(m.id); }
     } else if (pending.has(m.id)) {
       pending.get(m.id)(new Uint8ClampedArray(m.buffer));
       pending.delete(m.id);
@@ -224,6 +229,7 @@
   function scheduleIdle() {
     clearTimeout(state.idleTimer);
     if (!IS_MOBILE || state.demo || !navigator.canShare) return;
+    if (state.fullW * state.fullH > MAX_EXPORT_PX) return; // las gigantes tardan: se procesan al tocar Guardar
     state.idleTimer = setTimeout(() => { renderFull().then(() => setStatus('Lista para guardar')).catch(() => {}); }, 1400);
   }
 
@@ -340,8 +346,8 @@
     const withP3 = !!(meta && meta.isP3 && p3Supported());
 
     const bmp = await decode(file);
-    let { w, h } = dims(bmp);
-    if (w * h > MAX_EXPORT_PX) { const s = Math.sqrt(MAX_EXPORT_PX / (w * h)); w = Math.floor(w * s); h = Math.floor(h * s); }
+    const { w, h } = dims(bmp);
+    if (w * h > MAX_EXPORT_PX) return doRenderTiled(key, fmt, file, meta, bmp, w, h, withP3, presetId, pr);
     const cs = withP3 ? 'display-p3' : 'srgb';
     const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
     const cx = cv.getContext('2d', { colorSpace: cs, willReadFrequently: true });
@@ -374,6 +380,45 @@
     return result;
   }
 
+
+  /* Foto gigante: se procesa y codifica por franjas, así nunca hace falta un lienzo del tamaño completo. */
+  const workerCall = (msg, transfer) => new Promise((res) => {
+    const id = ++exportSeq; pending.set(id, res);
+    worker.postMessage(Object.assign({ reqId: id }, msg), transfer || []);
+  });
+  async function doRenderTiled(key, fmt, file, meta, bmp, w, h, withP3, presetId, pr) {
+    const quality = fmt === 'jpg95' ? 95 : 98, subsample = fmt === 'jpg95';
+    const segments = [];
+    if (meta && meta.exif) segments.push(meta.exif);
+    if (meta && withP3) for (const s of meta.icc) segments.push(s);
+    const jobId = ++exportSeq;
+    const cs = withP3 ? 'display-p3' : 'srgb';
+    const sc = document.createElement('canvas'); sc.width = w; sc.height = STRIP_ROWS;
+    const cx = sc.getContext('2d', { colorSpace: cs, willReadFrequently: true });
+    const parts = [];
+    const take = (r) => new Uint8Array(r);
+    try {
+      parts.push(take((await workerCall({ kind: 'tbegin', id: jobId, width: w, height: h, quality, subsample, segments,
+        presetId, intensity: pr.intensity, adj: pr.adj, grainScale: pr.grainScale, seed: 1 })).buffer));
+      for (let y0 = 0; y0 < h; y0 += STRIP_ROWS) {
+        if (state.renderKey !== key) { worker.postMessage({ kind: 'tabort', id: jobId }); throw new Error('cancelado'); }
+        const rows = Math.min(STRIP_ROWS, h - y0);
+        cx.clearRect(0, 0, w, STRIP_ROWS);
+        cx.drawImage(bmp, 0, y0, w, rows, 0, 0, w, rows);
+        const img = cx.getImageData(0, 0, w, rows, { colorSpace: cs });
+        const out = await workerCall({ kind: 'tstrip', id: jobId, y0, rows, buffer: img.data.buffer }, [img.data.buffer]);
+        parts.push(new Uint8Array(out.bytes));
+        if (state.onProgress) state.onProgress(Math.round((y0 + rows) / h * 100));
+      }
+      parts.push(new Uint8Array((await workerCall({ kind: 'tend', id: jobId })).bytes));
+    } finally { if (bmp.close) bmp.close(); }
+    const blob = new Blob(parts, { type: 'image/jpeg' });
+    const base = file.name.replace(/\.[^.]+$/, '');
+    const result = { key, blob, name: `${base}_${presetId}.jpg`, w, h, tiled: true };
+    if (state.file === file) state.cache = result;
+    return result;
+  }
+
   function downloadBlob(blob, name) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = name;
@@ -394,8 +439,10 @@
     if (state.saving) return;
     const wasReady = !!(state.cache && state.cache.key === JSON.stringify([state.file.name, state.file.size, state.presetId, getParams(), $('fmt').value, $('keepmeta').checked]));
     setSaving(true, wasReady ? 'Abriendo…' : 'Preparando foto…');
+    state.onProgress = (p) => { $('save').textContent = `Procesando ${p}%`; };
     try {
       const r = await renderFull();
+      if (r.tiled && $('fmt').value === 'png') toast('Foto muy grande: se guardó como JPG para conservar todos sus píxeles.', 5000);
       const f = new File([r.blob], r.name, { type: r.blob.type });
       if (IS_MOBILE && navigator.canShare && navigator.canShare({ files: [f] })) {
         await navigator.share({ files: [f] });
@@ -408,17 +455,20 @@
       if (e.name === 'NotAllowedError') toast('La foto ya está lista. Toca “Guardar en galería” otra vez.', 5000);
       else if (e.name !== 'AbortError') toast('No se pudo guardar: ' + e.message, 5000);
     }
+    state.onProgress = null;
     setSaving(false, idleLabel());
   }
 
   async function onSaveFile() {
     if (state.demo) { $('file').click(); return; }
     setSaving(true);
+    state.onProgress = (p) => { $('saveFile').textContent = `Procesando ${p}%`; };
     try {
       const r = await renderFull();
       downloadBlob(r.blob, r.name);
       toast(`Descargada: ${r.name} (${r.w}×${r.h} px, ${(r.blob.size / 1048576).toFixed(1)} MB)`);
     } catch (e) { toast('No se pudo exportar: ' + e.message, 5000); }
+    state.onProgress = null; $('saveFile').textContent = 'Descargar como archivo';
     setSaving(false, idleLabel());
   }
 

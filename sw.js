@@ -1,6 +1,6 @@
 /* Service worker: primero red (siempre la versión nueva), y caché si no hay internet. */
-const CACHE = 'filmfer-v1.1.0';
-const FILES = ['./', 'index.html', 'app.js', 'engine.js', 'presets.js', 'worker.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
+const CACHE = 'filmfer-v1.2.0';
+const FILES = ['./', 'index.html', 'app.js', 'engine.js', 'presets.js', 'worker.js', 'jpegenc.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
