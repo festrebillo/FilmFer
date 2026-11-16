@@ -1,6 +1,6 @@
 # ERS — FilmFer (web de filtros para fotos)
 
-Documento vivo. Última actualización: 2026-11-06 · Versión de la app: 1.5.0
+Documento vivo. Última actualización: 2026-11-16 · Versión de la app: 1.6.0
 
 ## 1. Objetivo
 Web estática (GitHub Pages / PWA) donde el usuario sube una foto, elige un preset, ajusta la
@@ -58,6 +58,7 @@ Opciones: (a) LUT .cube en CapCut escritorio/DaVinci (ya disponible); (b) en la 
 Publicado: https://festrebillo.github.io/FilmFer/ (repo público festrebillo/FilmFer; GitHub Pages gratis exige repo público). Cada push a main actualiza la web en 1-2 min.
 
 ## 8. Historial
+- 1.6.0 (2026-11-16): rediseño con el sistema Fergard (aprobado por el usuario sobre la maqueta `Fergard/AppsPersonales/maquetas/02_filmfer.png`): interfaz oscura neutra fija (los editores de foto la usan para no alterar el color de los filtros), acento ámbar solo en lo seleccionado y en la acción principal, nombre del preset sobre la foto, botón visible «Mantén para ver el original» (la acción sigue siendo mantener presionada la foto), barra de acciones pegada al borde inferior (antes flotaba con ~200 px vacíos debajo), texto de ayuda de la foto retirado en móvil. Solo CSS y un elemento decorativo; el motor y la exportación no cambian. Verificado con capturas en 430 px y escritorio; no probado en iPhone real. Pendiente: probar con una foto propia (la barra cambia a Guardar).
 - 1.5.0 (2026-11-06): +20 presets (Tendencias 13 a partir de búsqueda web: digicam, fuga de luz, Clarendon/Gingham-like, 2016, Dark Academia, Mocha, Cyberpunk, Vaporwave...; Efectos 7: Píxel Suave, 8 Bits, Mosaico, Game Boy, Retro Arcade, VHS, Glitch). Film 400 reajustado con mediciones de las portadas de Península (cielos más pálidos, negros más levantados, Vivo más saturado, Retro menos naranja). Botón Salir. Ícono e intro nuevos.
 - 1.4.0 (2026-11-06): +38 presets propios. Film 400 (13): looks de película de 400 ISO inspirados en el estilo de la tienda Peninsula Presets (revisada: Film Nº1-8, Retro 01-02, Blvck, Vivo, Cine Nº1; archivos .DNG US$5.99 c/u, pack US$29.99), recreados desde cero a partir de sus imágenes de portada, sin acceso ni copia de sus archivos. Estilo de vida (12) y Escenas (13): temas inspirados en los packs de 123Presets (Old Money, Quiet Luxury, Bright & Airy, Golden Hour, Twilight, Underwater, etc.). Afinados sobre 7 fotos reales del usuario (WhatsApp, 720-960 px). Todos con nombre propio.
 - 1.3.0 (2026-11-06): rediseño estilo Apple; pantalla de carga animada; foto de ejemplo sin persona (playa); ver original manteniendo presionada la foto; control de formato segmentado; deslizadores bipolares llenan desde el centro; íconos nuevos; contraste AA en colores de acento.

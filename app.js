@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const VERSION = '1.5.0';
+  const VERSION = '1.6.0';
   const $ = (id) => document.getElementById(id);
   $('ver').textContent = 'v' + VERSION;
 

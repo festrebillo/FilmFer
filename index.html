@@ -3,12 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0A0A0B">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="FilmFer">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="dark">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>FilmFer</title>
@@ -193,6 +192,38 @@
     .sheet-head h3{grid-column:1;font-size:13px;color:var(--label2);font-weight:600}
     .toast{bottom:28px}
   }
+  /* ===== v1.6.0 · sistema Fergard: oscuro neutro, foto protagonista, acciones ancladas ===== */
+  :root{
+    --bg:#0A0A0B; --card:#161618; --label:#F5F5F7; --label2:#9E9EA7; --sep:#2A2A2E; --fill:rgba(255,255,255,.08); --fill-strong:#2E2E33;
+    --tint:#FFC44D; --tint-fill:#FFB340; --tint-ink:#1A0F00; --glass:rgba(16,16,18,.78); --shadow:0 6px 24px -8px rgba(0,0,0,.7);
+    --switch-off:#39393d; color-scheme:dark;
+  }
+  .hold{position:absolute;right:12px;bottom:12px;display:flex;align-items:center;gap:6px;line-height:1;font-size:12.5px;font-weight:600;color:#fff;padding:8px 12px;border-radius:999px;
+        background:rgba(30,30,34,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.14);pointer-events:none}
+  .hold svg{width:15px;height:15px}
+  .photo::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(180deg,transparent,rgba(0,0,0,.62));pointer-events:none;z-index:1}
+  .photo .chip,.photo .hold{z-index:2}
+  .hint{display:none}
+  .btn.primary{background:linear-gradient(135deg,#FFC44D,#FF8A3D)}
+  .brand b{font-size:19px;font-weight:700;letter-spacing:-.02em}
+  .frame[aria-pressed=true] canvas{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--tint)}
+  @media (max-width:959px){
+    html,body{min-height:100dvh}
+    body{display:flex;flex-direction:column}
+    .app{flex:1;display:flex;flex-direction:column;width:100%}
+    .layout{flex:1;display:flex;flex-direction:column;padding-top:12px}
+    .stage-col{flex:none}
+    .tools{flex:1;display:flex;flex-direction:column}
+    .photo canvas{max-height:56vh}
+    /* el nombre del preset va sobre la foto, abajo a la izquierda */
+    .info{position:relative;z-index:3;margin:-58px 0 0;padding:0 16px 14px;pointer-events:none;color:#fff;min-height:44px;align-items:flex-end}
+    .info h2{font-size:21px;text-shadow:0 1px 8px rgba(0,0,0,.55)}
+    .info p{color:rgba(255,255,255,.88);font-size:13px;margin:0;max-width:62%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px rgba(0,0,0,.55)}
+    .status{display:none}
+    .foot{margin-top:10px}
+    /* barra de acciones siempre pegada al borde inferior */
+    .dock{position:sticky;bottom:0;margin-top:auto}
+  }
   @media (prefers-reduced-motion:reduce){
     .sp-frame,.sp-scene,.sp-names span,.splash-name,.splash-sub,.splash-bar,.splash-bar i{animation-duration:.01s;animation-delay:0s}
     .sheet,.toast,.backdrop,.chip,.splash{transition-duration:.01s}
@@ -232,6 +263,7 @@
         <canvas id="view" aria-label="Foto con el preset aplicado"></canvas>
         <canvas id="viewOrig" aria-hidden="true"></canvas>
         <div class="chip" id="badge">Original</div>
+        <div class="hold" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M12 4v16"/></svg>Mantén para ver el original</div>
       </div>
       <div class="info">
         <div><h2 id="pname">Original</h2><p id="about"></p></div>
