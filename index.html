@@ -309,6 +309,7 @@
           <div class="row" style="padding:0"><button class="listbtn press" id="saveFile" type="button">Descargar como archivo</button></div>
           <div class="row" style="padding:0"><button class="listbtn press" id="cube" type="button">Descargar preset como LUT (.cube) para video</button></div>
         </div>
+        <div class="group"><div class="row" id="acc"></div></div>
       </div>
 
       <p class="foot">Tu foto se procesa en este dispositivo. No se sube a ningún servidor.</p>
@@ -323,6 +324,16 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="config.js"></script>
+<script src="acceso.js"></script>
+<script>
+FergardAcceso.iniciar({
+  app: "filmfer", nombre: "FilmFer", clientId: window.FG_CFG.CLIENT_ID,
+  onListo: function () { FergardAcceso.panel(document.getElementById("acc")); },
+  tema: { bg: "#0A0A0B", fg: "#F5F5F7", mut: "#9E9EA7", acento: "#FFC44D", btnBg: "#FFB340", btnFg: "#1A0F00" },
+  marca: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#FFB340" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg>'
+});
+</script>
 <script src="engine.js"></script>
 <script src="presets.js"></script>
 <script src="app.js"></script>
